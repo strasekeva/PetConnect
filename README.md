@@ -39,3 +39,27 @@ Projekt PetConnect je zgrajen z uporabo naslednjih tehnologij:
 - Express.js
 - JavaScript
 - React
+
+## Namestitev in zagon projekta
+
+1. **Klonirajte repozitorij**:
+
+    ```bash
+    git clone https://github.com/strasekeva/PetConnect.git
+    cd petconnect-website
+    ```
+
+2. **Namestite odvisnosti**:
+
+    ```bash
+    npm install
+    ```
+
+3. **Zaženite razvojni strežnik**:
+
+    ```bash
+    npm start
+    ```
+
+S temi koraki bo vaša aplikacija PetConnect zagnana in pripravljena za uporabo.
+
