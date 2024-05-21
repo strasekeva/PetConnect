@@ -161,16 +161,16 @@ class DemoNavbar extends React.Component {
                   <UncontrolledDropdown nav>
                   <DropdownToggle nav>
                       <i className="ni ni-collection d-lg-none mr-1" />
-                      <span className="nav-link-inner--text">Zdravje</span>
+                      <span className="nav-link-inner--text" to="/sledenje-zdravju">Zdravje</span>
                     </DropdownToggle>
                     <DropdownMenu>
-                      <DropdownItem to="#" tag={Link}>
+                      <DropdownItem to="/sledenje-zdravju" tag={Link}>
                       Cepljenja
                       </DropdownItem>
-                      <DropdownItem to="#" tag={Link}>
+                      <DropdownItem to="/sledenje-zdravju" tag={Link}>
                       Prehrana
                       </DropdownItem>
-                      <DropdownItem to="#" tag={Link}>
+                      <DropdownItem to="/sledenje-zdravju" tag={Link}>
                       Obiski pri veterinarju
                       </DropdownItem>
                     </DropdownMenu>
