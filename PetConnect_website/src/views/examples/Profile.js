@@ -1,42 +1,50 @@
-/*!
-
-=========================================================
-* Argon Design System React - v1.1.2
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-design-system-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/argon-design-system-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
 import React from "react";
+import { firestore } from "components/Firebase/Firebase"; // Uvozite Firestore povezavo
+import { doc, getDoc } from "firebase/firestore";
 
-// reactstrap components
 import { Button, Card, Container, Row, Col } from "reactstrap";
-
-// core components
 import Navbar from "components/Navbars/Navbar.js";
 import SimpleFooter from "components/Footers/SimpleFooter.js";
 
 class Profile extends React.Component {
+  state = {
+    firstName: "",
+    lastName: "",
+  };
+
   componentDidMount() {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
     this.refs.main.scrollTop = 0;
+
+    const fetchUserData = async () => {
+      const userDoc = doc(firestore, "users", "K7J0htNHyH7fhlUfXBog"); // Zamenjajte z dejanskim ID-jem uporabnika
+      const docSnap = await getDoc(userDoc);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        this.setState({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+        });
+      } else {
+        console.log("No such document!");
+      }
+    };
+
+    fetchUserData().catch((error) => {
+      console.log("Error getting document:", error);
+    });
   }
+
   render() {
+    const { firstName, lastName } = this.state;
+
     return (
       <>
         <Navbar />
         <main className="profile-page" ref="main">
           <section className="section-profile-cover section-shaped my-0">
-            {/* Circles background */}
             <div className="shape shape-style-1 shape-default alpha-4">
               <span />
               <span />
@@ -46,7 +54,6 @@ class Profile extends React.Component {
               <span />
               <span />
             </div>
-            {/* SVG separator */}
             <div className="separator separator-bottom separator-skew">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +130,7 @@ class Profile extends React.Component {
                   </Row>
                   <div className="text-center mt-5">
                     <h3>
-                      Jessica Jones{" "}
+                      {firstName} {lastName}{" "}
                       <span className="font-weight-light">, 27</span>
                     </h3>
                     <div className="h6 font-weight-300">
