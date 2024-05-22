@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from "components/Navbars/Navbar.js";
 import SimpleFooter from "components/Footers/SimpleFooter.js";
+import { firestore } from 'components/Firebase/Firebase';
+import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const SledenjeZdravju = () => {
   const [healthData, setHealthData] = useState({
@@ -11,6 +14,28 @@ const SledenjeZdravju = () => {
   });
 
   const [submittedEntries, setSubmittedEntries] = useState([]);
+  const [vaccinationDates, setVaccinationDates] = useState([]);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(firestore, 'healthData'));
+        const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setSubmittedEntries(data);
+
+        // Extract vaccination dates from data and save them in state
+        const dates = data.flatMap(entry =>
+          entry.cepljenje.map(vaccine => new Date(vaccine.datum))
+        );
+        setVaccinationDates(dates);
+      } catch (error) {
+        console.error('Error fetching documents: ', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,21 +60,45 @@ const SledenjeZdravju = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newEntry = {
       ...healthData,
       timestamp: new Date().toLocaleString()
     };
-    setSubmittedEntries([...submittedEntries, newEntry]);
-    setHealthData({
-      cepljenje: [{ namen: '', datum: '' }],
-      prehrana: '',
-      teza: '',
-      obiskiPriVeterinarju: ''
-    });
+
+    try {
+      const docRef = await addDoc(collection(firestore, 'healthData'), newEntry);
+      setSubmittedEntries([...submittedEntries, { id: docRef.id, ...newEntry }]);
+      setHealthData({
+        cepljenje: [{ namen: '', datum: '' }],
+        prehrana: '',
+        teza: '',
+        obiskiPriVeterinarju: ''
+      });
+    } catch (error) {
+      console.error('Error adding document: ', error);
+    }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(firestore, 'healthData', id));
+      setSubmittedEntries(submittedEntries.filter(entry => entry.id !== id));
+    } catch (error) {
+      console.error('Error deleting document: ', error);
+    }
+  };
+
+  // Sort submittedEntries by timestamp in ascending order
+  const sortedEntries = [...submittedEntries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  const weightData = sortedEntries.map(entry => ({
+    timestamp: entry.timestamp,
+    teza: parseFloat(entry.teza)
+  }));
+
+  
   return (
     <div>
       <Navbar />
@@ -116,13 +165,19 @@ const SledenjeZdravju = () => {
           </button>
         </form>
 
-        {submittedEntries.length > 0 && (
+        {sortedEntries.length > 0 && (
           <div className="mt-5">
             <h3>Vpisani podatki o zdravju</h3>
-            {submittedEntries.map((entry, index) => (
+            {sortedEntries.map((entry, index) => (
               <div key={index} className="card mb-3">
                 <div className="card-header">
                   <strong>Datum in ura vnosa:</strong> {entry.timestamp}
+                  <button
+                    className="btn btn-danger btn-sm float-right ml-2"
+                    onClick={() => handleDelete(entry.id)}
+                  >
+                    Odstrani
+                  </button>
                 </div>
                 <div className="card-body">
                   <p><strong>Cepljenja:</strong></p>
@@ -140,6 +195,20 @@ const SledenjeZdravju = () => {
                 </div>
               </div>
             ))}
+            
+            <div className="mt-5">
+              <h3>Spremembe teže skozi čas</h3>
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={weightData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="teza" stroke="#8884d8" activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
       </div>
