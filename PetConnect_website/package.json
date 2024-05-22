@@ -29,7 +29,9 @@
   },
   "homepage": "https://demos.creative-tim.com/argon-design-system-react/",
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server.mjs",
+    "client": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -47,11 +49,17 @@
     "not op_mini all"
   ],
   "dependencies": {
+    "body-parser": "^1.20.2",
     "bootstrap": "4.6.2",
     "classnames": "2.3.2",
+    "concurrently": "^5.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "firebase": "^10.12.1",
     "headroom.js": "0.12.0",
     "moment": "2.29.4",
+    "node-fetch": "^3.3.2",
     "nouislider": "15.4.0",
     "react": ">=16.0.0",
     "react-calendly": "^4.3.0",
@@ -75,5 +83,6 @@
   },
   "overrides": {
     "svgo": "3.0.2"
-  }
+  },
+  "proxy": "http://localhost:5000"
 }

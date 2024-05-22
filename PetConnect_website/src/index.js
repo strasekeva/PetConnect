@@ -28,7 +28,9 @@ import Landing from "views/examples/Landing.js";
 import Login from "views/examples/Login.js";
 import Profile from "views/examples/Profile.js";
 import Register from "views/examples/Register.js";
-import SledenjeZdravju from "views/examples/SledenjeZdravju";
+import SledenjeZdravju from "views/examples/SledenjeZdravju.js";
+import VeterinaryArticles from "components/Veterinary/VeterinaryArticles.js";
+import ChatComponent from "components/Veterinary/Chat.js";
 import Koledar from "views/examples/Koledar";
 
 
@@ -44,6 +46,9 @@ root.render(
       <Route path="/register-page" exact element={<Register />} />
       <Route path="/sledenje-zdravju" exact element={<SledenjeZdravju />} />
       <Route path="/koledar" exact element={<Koledar />} />  
+      <Route path="/sledenje-zdravju" exact element={<SledenjeZdravju />} />
+      <Route path="/clanki" exact element={<VeterinaryArticles />} />
+      <Route path="/nasveti" exact element={<ChatComponent />} />    
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   </BrowserRouter>
