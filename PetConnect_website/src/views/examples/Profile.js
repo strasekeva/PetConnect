@@ -17,24 +17,28 @@ class Profile extends React.Component {
     document.scrollingElement.scrollTop = 0;
     this.refs.main.scrollTop = 0;
 
-    const fetchUserData = async () => {
-      const userDoc = doc(firestore, "users", "K7J0htNHyH7fhlUfXBog"); // Zamenjajte z dejanskim ID-jem uporabnika
-      const docSnap = await getDoc(userDoc);
+    const userUid = localStorage.getItem('userUid'); // Retrieve user UID from localStorage
 
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        this.setState({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-        });
-      } else {
-        console.log("No such document!");
-      }
-    };
+    if (userUid) {
+      const fetchUserData = async () => {
+        const userDoc = doc(firestore, "users", userUid);
+        const docSnap = await getDoc(userDoc);
 
-    fetchUserData().catch((error) => {
-      console.log("Error getting document:", error);
-    });
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          this.setState({
+            firstName: userData.name,
+            lastName: userData.surname,
+          });
+        } else {
+          console.log("No such document!");
+        }
+      };
+
+      fetchUserData().catch((error) => {
+        console.log("Error getting document:", error);
+      });
+    }
   }
 
   render() {
@@ -130,7 +134,7 @@ class Profile extends React.Component {
                   </Row>
                   <div className="text-center mt-5">
                     <h3>
-                      {firstName} {lastName}{" "}
+                      {firstName} {lastName}{""}
                       <span className="font-weight-light">, 27</span>
                     </h3>
                     <div className="h6 font-weight-300">

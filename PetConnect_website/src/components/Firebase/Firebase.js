@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import 'firebase/auth'; // Uvozite samo tiste Firebase module, ki jih potrebujete
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -13,5 +13,5 @@ const firebaseConfig = {
 
 
 const app = initializeApp(firebaseConfig);
-
+export const auth = getAuth(app);
 export const firestore = getFirestore(app);

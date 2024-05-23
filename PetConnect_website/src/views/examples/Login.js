@@ -15,8 +15,8 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
-
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 // reactstrap components
 import {
   Button,
@@ -34,21 +34,37 @@ import {
   Col,
 } from "reactstrap";
 
+import { auth } from "components/Firebase/Firebase.js"; // Adjust this path as necessary
+import { signInWithEmailAndPassword } from 'firebase/auth';
+
 // core components
 import Navbar from "components/Navbars/Navbar.js";
 import SimpleFooter from "components/Footers/SimpleFooter.js";
 
-class Login extends React.Component {
-  componentDidMount() {
-    document.documentElement.scrollTop = 0;
-    document.scrollingElement.scrollTop = 0;
-    this.refs.main.scrollTop = 0;
-  }
-  render() {
+function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const mainRef = useRef(null); 
+  const navigate = useNavigate();
+
+  const handleLogin = (event) => {
+    event.preventDefault();
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        console.log('Login successful', userCredential.user);
+        localStorage.setItem('userUid', userCredential.user.uid); // Save user UID to localStorage
+        navigate('/'); // Navigate to the homepage or profile page
+      })
+      .catch((error) => {
+        setError(error.message);
+        console.error('Error during login:', error);
+      });
+  };
     return (
       <>
         <Navbar />
-        <main ref="main">
+        <main ref={mainRef}>
           <section className="section section-shaped section-lg">
             <div className="shape shape-style-1 bg-gradient-default">
               <span />
@@ -109,7 +125,7 @@ class Login extends React.Component {
                       <div className="text-center text-muted mb-4">
                         <small>Or sign in with credentials</small>
                       </div>
-                      <Form role="form">
+                      <Form role="form" onSubmit={handleLogin}>
                         <FormGroup className="mb-3">
                           <InputGroup className="input-group-alternative">
                             <InputGroupAddon addonType="prepend">
@@ -117,7 +133,7 @@ class Login extends React.Component {
                                 <i className="ni ni-email-83" />
                               </InputGroupText>
                             </InputGroupAddon>
-                            <Input placeholder="Email" type="email" />
+                            <Input placeholder="Email" type="email" onChange={(e) => setEmail(e.target.value)} />
                           </InputGroup>
                         </FormGroup>
                         <FormGroup>
@@ -127,11 +143,7 @@ class Login extends React.Component {
                                 <i className="ni ni-lock-circle-open" />
                               </InputGroupText>
                             </InputGroupAddon>
-                            <Input
-                              placeholder="Password"
-                              type="password"
-                              autoComplete="off"
-                            />
+                            <Input placeholder="Password" type="password" autoComplete="off" onChange={(e) => setPassword(e.target.value)} />
                           </InputGroup>
                         </FormGroup>
                         <div className="custom-control custom-control-alternative custom-checkbox">
@@ -151,7 +163,7 @@ class Login extends React.Component {
                           <Button
                             className="my-4"
                             color="primary"
-                            type="button"
+                            type="submit"
                           >
                             Sign in
                           </Button>
@@ -188,6 +200,5 @@ class Login extends React.Component {
       </>
     );
   }
-}
 
 export default Login;

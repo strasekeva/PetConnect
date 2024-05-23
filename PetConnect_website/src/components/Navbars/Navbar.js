@@ -19,6 +19,9 @@ import React from "react";
 import { Link } from "react-router-dom";
 // JavaScript plugin that hides or shows a component based on your scroll
 import Headroom from "headroom.js";
+import Logout from "views/examples/Logout";
+import { auth } from "components/Firebase/Firebase.js"; // Make sure the path is correct
+import { onAuthStateChanged } from "firebase/auth";
 // reactstrap components
 import {
   Button,
@@ -40,15 +43,29 @@ import {
 } from "reactstrap";
 
 class DemoNavbar extends React.Component {
-  componentDidMount() {
-    let headroom = new Headroom(document.getElementById("navbar-main"));
-    // initialise
-    headroom.init();
-  }
   state = {
     collapseClasses: "",
     collapseOpen: false,
+    isAuthenticated: false,  // State to keep track of authentication status
   };
+
+  componentDidMount() {
+    let headroom = new Headroom(document.getElementById("navbar-main"));
+    headroom.init();
+
+    // Firebase Auth listener to toggle authentication status
+    this.authUnsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        this.setState({ isAuthenticated: true });
+      } else {
+        this.setState({ isAuthenticated: false });
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    this.authUnsub();  // Unsubscribe from auth listener when component unmounts
+  }
 
   onExiting = () => {
     this.setState({
@@ -63,6 +80,7 @@ class DemoNavbar extends React.Component {
   };
 
   render() {
+    const { isAuthenticated } = this.state;
     return (
       <>
         <header className="header-global">
@@ -197,34 +215,37 @@ class DemoNavbar extends React.Component {
                   </UncontrolledDropdown>
                 </Nav>
                 <Nav className="ml-lg-auto" navbar>
-                  <NavItem>
-                    <NavLink to="/register-page" tag={Link}>
-                      Registracija <span className="sr-only">(current)</span>
-                    </NavLink>
-                  </NavItem>
-                  <NavItem>
-                    <NavLink to="/login-page" tag={Link}>
-                      Prijava
-                    </NavLink>
-                  </NavItem>
-                  <UncontrolledDropdown nav inNavbar>
-                    <DropdownToggle nav><i className="ni ni-circle-08"></i></DropdownToggle>
-                    <DropdownMenu
-                      aria-labelledby="navbar-primary_dropdown_1"
-                      right
-                    >
-                      <DropdownItem to="/profile-page" tag={Link}>
-                        Uredi profil
-                      </DropdownItem>
-                      <DropdownItem divider />
-                      <DropdownItem
-                        href="#pablo"
-                        onClick={(e) => e.preventDefault()}
+                  {!isAuthenticated && (
+                    <>
+                      <NavItem>
+                        <NavLink to="/register-page" tag={Link}>
+                          Registracija <span className="sr-only">(current)</span>
+                        </NavLink>
+                      </NavItem>
+                      <NavItem>
+                        <NavLink to="/login-page" tag={Link}>
+                          Prijava
+                        </NavLink>
+                      </NavItem>
+                    </>
+                  )}
+                  {isAuthenticated && (
+                    <UncontrolledDropdown nav inNavbar>
+                      <DropdownToggle nav>
+                        <i className="ni ni-circle-08"></i>
+                      </DropdownToggle>
+                      <DropdownMenu
+                        aria-labelledby="navbar-primary_dropdown_1"
+                        right
                       >
-                        Odjava
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </UncontrolledDropdown>
+                        <DropdownItem to="/profile-page" tag={Link}>
+                          Uredi profil
+                        </DropdownItem>
+                        <DropdownItem divider />
+                        <Logout />
+                      </DropdownMenu>
+                    </UncontrolledDropdown>
+                  )}
                 </Nav>
               </UncontrolledCollapse>
             </Container>
