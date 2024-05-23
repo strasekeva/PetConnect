@@ -34,6 +34,7 @@ import ChatComponent from "components/Veterinary/Chat.js";
 import Koledar from "views/examples/Koledar";
 
 import { AuthProvider } from "components/Contexts/AuthContext.js";
+import PogostaVprasanja from "components/Veterinary/PogostaVprasanja";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -52,6 +53,7 @@ root.render(
           <Route path="/koledar" element={<Koledar />} />
           <Route path="/clanki" element={<VeterinaryArticles />} />
           <Route path="/nasveti" element={<ChatComponent />} />
+          <Route path="/pogosta-vprasanja" element={<PogostaVprasanja />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

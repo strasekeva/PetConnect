@@ -93,6 +93,8 @@ const ChatComponent = () => {
         timestamp: serverTimestamp()
       });
 
+      fetchHistory();
+
     } catch (error) {
       console.error('Error:', error);
       setError(`An error occurred: ${error.message}`);
@@ -121,7 +123,7 @@ const ChatComponent = () => {
           <Container>
             <Row className="justify-content-center">
               <Col md="8">
-                <h1 className="text-center">Kaj te zanima</h1>
+                <h1 className="text-center display-2 mb-0">Kaj te zanima</h1>
                 <Form onSubmit={handleSubmit}>
                   <FormGroup>
                     <Label for="question">Vprašanje</Label>
@@ -166,6 +168,7 @@ const ChatComponent = () => {
           <span />
           <span />
         </div>
+        <p className="text-center text-muted mb-0">Nasveti so napisani s strani shatGPT in ni nujno da so zanesljivi</p>
       </main>
       <SimpleFooter />
     </>

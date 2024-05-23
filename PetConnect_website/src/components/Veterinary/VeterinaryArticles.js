@@ -38,6 +38,9 @@ const VeterinaryArticles = () => {
         </section>
         <section>
           <Container className="mt-5">
+            <div style={{marginBottom: "3%"}}>
+              <h1 className="text-center display-1 mb-0">Novice</h1>
+            </div>
             <Row>
               {articles.map((article, index) => (
                 <Col key={index} md="4" className="mb-4">
@@ -60,6 +63,7 @@ const VeterinaryArticles = () => {
           </Container>
 
         </section>
+        <p className="text-center text-muted mb-0">Vir: https://www.dzzz.si/</p>
       </main>
       <SimpleFooter />
     </>
