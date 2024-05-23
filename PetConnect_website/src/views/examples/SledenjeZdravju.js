@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from "components/Navbars/Navbar.js";
 import SimpleFooter from "components/Footers/SimpleFooter.js";
-import { firestore } from 'components/Firebase/Firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { firestore, auth } from 'components/Firebase/Firebase'; // Import Firestore and Firebase Authentication
+import { collection, addDoc, getDocs, deleteDoc, doc, where } from 'firebase/firestore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const SledenjeZdravju = () => {
@@ -15,26 +15,39 @@ const SledenjeZdravju = () => {
 
   const [submittedEntries, setSubmittedEntries] = useState([]);
   const [vaccinationDates, setVaccinationDates] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const querySnapshot = await getDocs(
+            collection(firestore, 'healthData'),
+            where('userUID', '==', currentUser.uid) // Filter entries by userUID
+          );
+          const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setSubmittedEntries(data);
+    
+          const dates = data.flatMap(entry =>
+            entry.cepljenje.map(vaccine => new Date(vaccine.datum))
+          );
+          setVaccinationDates(dates);
+        } catch (error) {
+          console.error('Error fetching documents: ', error);
+        }
+      };
+    
+      if (currentUser) {
+        fetchData();
+      }
+    }, [currentUser]); // Fetch data when currentUser changes
+    
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(firestore, 'healthData'));
-        const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSubmittedEntries(data);
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      setCurrentUser(user);
+    });
 
-        // Extract vaccination dates from data and save them in state
-        const dates = data.flatMap(entry =>
-          entry.cepljenje.map(vaccine => new Date(vaccine.datum))
-        );
-        setVaccinationDates(dates);
-      } catch (error) {
-        console.error('Error fetching documents: ', error);
-      }
-    };
-
-    fetchData();
+    return () => unsubscribe();
   }, []);
 
   const handleChange = (e) => {
@@ -64,7 +77,8 @@ const SledenjeZdravju = () => {
     e.preventDefault();
     const newEntry = {
       ...healthData,
-      timestamp: new Date().toLocaleString()
+      timestamp: new Date().toLocaleString(),
+      userUID: currentUser.uid
     };
 
     try {
@@ -93,15 +107,24 @@ const SledenjeZdravju = () => {
   // Sort submittedEntries by timestamp in ascending order
   const sortedEntries = [...submittedEntries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-  const weightData = sortedEntries.map(entry => ({
+  const weightData = sortedEntries
+  .filter(entry => entry.userUID === currentUser.uid)
+  .map(entry => ({
     timestamp: entry.timestamp,
     teza: parseFloat(entry.teza)
   }));
 
+
   
+
   return (
-    <div>
+    <>
       <Navbar />
+      <section className="section section-shaped section-lg">
+        <div className="shape shape-style-1 shape-default alpha-4">
+          <span />
+        </div>
+      </section>
       <div className="container mt-5">
         <h2>Sledenje zdravju vašega ljubljenčka</h2>
         <form onSubmit={handleSubmit}>
@@ -164,36 +187,39 @@ const SledenjeZdravju = () => {
             Shrani podatke o zdravju
           </button>
         </form>
-
-        {sortedEntries.length > 0 && (
+  
+        {currentUser && sortedEntries.length > 0 && (
           <div className="mt-5">
             <h3>Vpisani podatki o zdravju</h3>
             {sortedEntries.map((entry, index) => (
-              <div key={index} className="card mb-3">
-                <div className="card-header">
-                  <strong>Datum in ura vnosa:</strong> {entry.timestamp}
-                  <button
-                    className="btn btn-danger btn-sm float-right ml-2"
-                    onClick={() => handleDelete(entry.id)}
-                  >
-                    Odstrani
-                  </button>
+              // Prikaži samo vnose, ki pripadajo trenutno prijavljenemu uporabniku
+              entry.userUID === currentUser.uid && (
+                <div key={index} className="card mb-3">
+                  <div className="card-header">
+                    <strong>Datum in ura vnosa:</strong> {entry.timestamp}
+                    <button
+                      className="btn btn-danger btn-sm float-right ml-2"
+                      onClick={() => handleDelete(entry.id)}
+                    >
+                      Odstrani
+                    </button>
+                  </div>
+                  <div className="card-body">
+                    <p><strong>Cepljenja:</strong></p>
+                    <ul>
+                      {entry.cepljenje.map((cepljenje, i) => (
+                        <li key={i}>
+                          <p><strong>Namen:</strong> {cepljenje.namen}</p>
+                          <p><strong>Datum:</strong> {cepljenje.datum}</p>
+                        </li>
+                      ))}
+                    </ul>
+                    <p><strong>Prehrana:</strong> {entry.prehrana}</p>
+                    <p><strong>Teža:</strong> {entry.teza} kg</p>
+                    <p><strong>Zadnji obisk pri veterinarju:</strong> {entry.obiskiPriVeterinarju}</p>
+                  </div>
                 </div>
-                <div className="card-body">
-                  <p><strong>Cepljenja:</strong></p>
-                  <ul>
-                    {entry.cepljenje.map((cepljenje, i) => (
-                      <li key={i}>
-                        <p><strong>Namen:</strong> {cepljenje.namen}</p>
-                        <p><strong>Datum:</strong> {cepljenje.datum}</p>
-                      </li>
-                    ))}
-                  </ul>
-                  <p><strong>Prehrana:</strong> {entry.prehrana}</p>
-                  <p><strong>Teža:</strong> {entry.teza} kg</p>
-                  <p><strong>Zadnji obisk pri veterinarju:</strong> {entry.obiskiPriVeterinarju}</p>
-                </div>
-              </div>
+              )
             ))}
             
             <div className="mt-5">
@@ -213,8 +239,8 @@ const SledenjeZdravju = () => {
         )}
       </div>
       <SimpleFooter />
-    </div>
+    </>
   );
-};
+}
 
-export default SledenjeZdravju;
+  export default SledenjeZdravju;
