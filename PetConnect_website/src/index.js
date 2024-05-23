@@ -33,23 +33,28 @@ import VeterinaryArticles from "components/Veterinary/VeterinaryArticles.js";
 import ChatComponent from "components/Veterinary/Chat.js";
 import Koledar from "views/examples/Koledar";
 
+import { AuthProvider } from "components/Contexts/AuthContext.js";
+
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" exact element={<Index />} />
-      <Route path="/landing-page" exact element={<Landing />} />
-      <Route path="/login-page" exact element={<Login />} />
-      <Route path="/profile-page" exact element={<Profile />} />
-      <Route path="/register-page" exact element={<Register />} />
-      <Route path="/sledenje-zdravju" exact element={<SledenjeZdravju />} />
-      <Route path="/koledar" exact element={<Koledar />} />  
-      <Route path="/sledenje-zdravju" exact element={<SledenjeZdravju />} />
-      <Route path="/clanki" exact element={<VeterinaryArticles />} />
-      <Route path="/nasveti" exact element={<ChatComponent />} />    
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  </BrowserRouter>
+  <React.StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/landing-page" element={<Landing />} />
+          <Route path="/login-page" element={<Login />} />
+          <Route path="/profile-page" element={<Profile />} />
+          <Route path="/register-page" element={<Register />} />
+          <Route path="/sledenje-zdravju" element={<SledenjeZdravju />} />
+          <Route path="/koledar" element={<Koledar />} />
+          <Route path="/clanki" element={<VeterinaryArticles />} />
+          <Route path="/nasveti" element={<ChatComponent />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>
 );

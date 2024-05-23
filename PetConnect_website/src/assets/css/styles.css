@@ -1,0 +1,10 @@
+.button-group {
+    display: flex;
+    justify-content: center;  
+    gap: 2%;   
+    margin-bottom: 3%             
+}
+
+.button-group button {              
+    width: 30%;       
+}

@@ -1,0 +1,36 @@
+.history-container {
+    margin-top: 20px;
+}
+
+.history-entry {
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.history-question, .history-answer {
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 10px;
+}
+
+.history-question {
+    background-color: #d1ecf1;
+    border-left: 5px solid #0c5460;
+    color: #0c5460;
+}
+
+.history-answer {
+    background-color: #cce5ff;
+    border-left: 5px solid #004085;
+    color: #004085;
+    text-align: left;
+}
+
+.history-title {
+    text-align: center;
+    font-weight: bold;
+    color: #333;
+}
