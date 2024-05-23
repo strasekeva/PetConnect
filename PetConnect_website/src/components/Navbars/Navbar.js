@@ -128,7 +128,7 @@ class DemoNavbar extends React.Component {
                       <span className="nav-link-inner--text">Skupnost</span>
                     </DropdownToggle>
                     <DropdownMenu>
-                      <DropdownItem to="#" tag={Link}>
+                      <DropdownItem to="/skupinske-aktivnosti" tag={Link}>
                       Skupinske aktivnosti
                       </DropdownItem>
                       <DropdownItem to="#" tag={Link}>
