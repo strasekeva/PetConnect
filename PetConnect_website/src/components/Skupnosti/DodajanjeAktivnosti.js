@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, updateDoc, doc, Timestamp, getDoc } from 'firebase/firestore';
 import { Form, FormGroup, Label, Input, Button } from 'reactstrap';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -24,6 +24,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
     const [latitude, setLatitude] = useState(46.5547); // Privzeto na Maribor
     const [longitude, setLongitude] = useState(15.6459); // Privzeto na Maribor
     const [date, setDate] = useState('');
+    const [userData, setUserData] = useState(null);
 
     useEffect(() => {
         if (activity) {
@@ -36,10 +37,28 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
         }
     }, [activity]);
 
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const userUid = localStorage.getItem('userUid'); // Get user UID from localStorage
+            if (userUid) {
+                const userDoc = doc(getFirestore(), 'users', userUid);
+                const docSnap = await getDoc(userDoc);
+
+                if (docSnap.exists()) {
+                    setUserData(docSnap.data());
+                } else {
+                    console.log("No such document!");
+                }
+            }
+        };
+        fetchUserData();
+    }, []);
+
     const firestore = getFirestore();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         const activityData = {
             name,
             description,
@@ -47,6 +66,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
             date: Timestamp.fromDate(new Date(date)), // Pretvori datum v Firestore Timestamp
+            user: userData ? { uid: localStorage.getItem('userUid'), email: userData.email } : null // Add user information
         };
         try {
             if (activity) {
@@ -65,7 +85,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
     return (
         <Form onSubmit={handleSubmit}>
             <FormGroup>
-                <Label for="name">Name</Label>
+                <Label for="name">Ime aktivnosti</Label>
                 <Input
                     type="text"
                     id="name"
@@ -75,7 +95,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                 />
             </FormGroup>
             <FormGroup>
-                <Label for="description">Description</Label>
+                <Label for="description">Opis</Label>
                 <Input
                     type="text"
                     id="description"
@@ -85,7 +105,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                 />
             </FormGroup>
             <FormGroup>
-                <Label for="location">Location</Label>
+                <Label for="location">Lokacija</Label>
                 <Input
                     type="text"
                     id="location"
@@ -117,7 +137,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                 />
             </FormGroup>
             <FormGroup>
-                <Label for="date">Date</Label>
+                <Label for="date">Datum</Label>
                 <Input
                     type="date"
                     id="date"
