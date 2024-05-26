@@ -32,10 +32,13 @@ import SledenjeZdravju from "views/examples/SledenjeZdravju.js";
 import VeterinaryArticles from "components/Veterinary/VeterinaryArticles.js";
 import ChatComponent from "components/Veterinary/Chat.js";
 import Koledar from "views/examples/Koledar";
+import IzdelkiOcena from "views/examples/Izdelki";
+
 
 import { AuthProvider } from "components/Contexts/AuthContext.js";
 import PogostaVprasanja from "components/Veterinary/PogostaVprasanja";
 import SkupinskeAktivnosti from "components/Skupnosti/SkupinskeAktivnosti";
+import Izdelki from "views/examples/Izdelki";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -56,6 +59,7 @@ root.render(
           <Route path="/nasveti" element={<ChatComponent />} />
           <Route path="/pogosta-vprasanja" element={<PogostaVprasanja />} />
           <Route path="/skupinske-aktivnosti" element={<SkupinskeAktivnosti />} />
+          <Route path="/izdelki" element={<Izdelki />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
