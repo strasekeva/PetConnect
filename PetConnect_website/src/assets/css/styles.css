@@ -34,15 +34,18 @@
     margin-bottom: 1rem;
 }
 
+/*
 .delete-button {
     position: absolute;
     top: 10%;
     right: 1%;
 }
+*/
 
+/*
 .edit-button {
     position: absolute;
     top: 10%;
     right: 15%;
-    /* Adjust this value based on the size of the buttons to avoid overlap */
-}
+} */
+ 

@@ -5,6 +5,20 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-defaulticon-compatibility';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
+import PrijavaNaAktivnost from './PrijavaNaAktivnost';
+
+const categories = [
+    { value: 'walks', label: 'Sprehodi' },
+    { value: 'training', label: 'Šolanje' },
+    { value: 'games', label: 'Igre' },
+    { value: 'health', label: 'Zdravje' },
+    { value: 'competitions', label: 'Tekmovanja' },
+    { value: 'education', label: 'Izobraževanje' },
+    { value: 'adoption', label: 'Adopcija' },
+    { value: 'family', label: 'Družinski dnevi' },
+    { value: 'sports', label: 'Šport' },
+    { value: 'photography', label: 'Fotografija' },
+];
 
 const LocationSelector = ({ setLatitude, setLongitude }) => {
     useMapEvents({
@@ -24,6 +38,12 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
     const [latitude, setLatitude] = useState(46.5547); // Privzeto na Maribor
     const [longitude, setLongitude] = useState(15.6459); // Privzeto na Maribor
     const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const [category, setCategory] = useState('');
+    const [registrationRequired, setRegistrationRequired] = useState('no');
+    const [availableSeats, setAvailableSeats] = useState('');
+    const [free, setFree] = useState('yes');
+    const [price, setPrice] = useState('');
     const [userData, setUserData] = useState(null);
 
     useEffect(() => {
@@ -34,6 +54,12 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
             setLatitude(activity.latitude);
             setLongitude(activity.longitude);
             setDate(new Date(activity.date.seconds * 1000).toISOString().substr(0, 10));
+            setTime(new Date(activity.date.seconds * 1000).toISOString().substr(11, 5));
+            setCategory(activity.category || '');
+            setRegistrationRequired(activity.registrationRequired || 'no');
+            setAvailableSeats(activity.availableSeats || '');
+            setFree(activity.free || 'yes');
+            setPrice(activity.price || '');
         }
     }, [activity]);
 
@@ -58,14 +84,19 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        const activityDate = new Date(`${date}T${time}`);
         const activityData = {
             name,
             description,
             location,
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
-            date: Timestamp.fromDate(new Date(date)), // Pretvori datum v Firestore Timestamp
+            date: Timestamp.fromDate(activityDate), // Pretvori datum in čas v Firestore Timestamp
+            category,
+            registrationRequired,
+            availableSeats: registrationRequired === 'yes' ? parseInt(availableSeats, 10) : '',
+            free,
+            price: free === 'no' ? parseFloat(price) : '',
             user: userData ? { uid: localStorage.getItem('userUid'), email: userData.email } : null // Add user information
         };
         try {
@@ -146,6 +177,43 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                     required
                 />
             </FormGroup>
+            <FormGroup>
+                <Label for="time">Čas</Label>
+                <Input
+                    type="time"
+                    id="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    required
+                />
+            </FormGroup>
+            <FormGroup>
+                <Label for="category">Kategorija</Label>
+                <Input
+                    type="select"
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                >
+                    <option value="">Izberite kategorijo</option>
+                    {categories.map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                        </option>
+                    ))}
+                </Input>
+            </FormGroup>
+            <PrijavaNaAktivnost
+                registrationRequired={registrationRequired}
+                setRegistrationRequired={setRegistrationRequired}
+                availableSeats={availableSeats}
+                setAvailableSeats={setAvailableSeats}
+                free={free}
+                setFree={setFree}
+                price={price}
+                setPrice={setPrice}
+            />
             <div style={{ height: '300px', marginBottom: '20px' }}>
                 <MapContainer center={[latitude, longitude]} zoom={13} style={{ height: '100%', width: '100%' }}>
                     <TileLayer
