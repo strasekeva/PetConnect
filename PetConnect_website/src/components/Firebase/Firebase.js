@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'; // Import Firebase Authentication
-import { getFirestore } from 'firebase/firestore'; // Import Firestore
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage'; // Import Firebase Storage
 
 const firebaseConfig = {
     apiKey: "AIzaSyApXqxWnhuqZHONWJmnVhUX1KtGNLiAMvk",
@@ -14,6 +15,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); // Initialize Firebase Authentication
 const firestore = getFirestore(app); // Initialize Firestore
+const storage = getStorage(app); // Dodajanje inicializacije Cloud Storage
 
-export { firestore, auth }; // Export both firestore and auth
-
+export { firestore, auth, storage }; // Export auth, firestore, and storage
