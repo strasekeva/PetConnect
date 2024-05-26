@@ -14,6 +14,11 @@ class Koledar extends React.Component {
         return (
             <>
             <Navbar />
+            <section className="section section-shaped section-lg">
+                <div className="shape shape-style-1 shape-default alpha-4">
+                <span />
+                </div>
+            </section>
             <main ref="main">
                 <div className="container mt-5">
                 <h2>Koledar</h2>
