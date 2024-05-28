@@ -134,7 +134,7 @@ class DemoNavbar extends React.Component {
                       <DropdownItem to="/forum" tag={Link}>
                       Forum
                       </DropdownItem>
-                      <DropdownItem to="#" tag={Link}>
+                      <DropdownItem to="/lokalne-skupnosti" tag={Link}>
                       Lokalne skupine
                       </DropdownItem>
                     </DropdownMenu>

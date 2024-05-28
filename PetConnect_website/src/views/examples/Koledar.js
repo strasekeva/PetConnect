@@ -26,10 +26,23 @@ const Koledar = () => {
                 <div className="shape shape-style-1 shape-default alpha-4">
                     <span />
                 </div>
+                <Container className="py-lg-md d-flex">
+                    <div className="col px-0">
+                        <Row>
+                            <Col lg="9">
+                                <h1 className="display-2 text-white">
+                                Rezervacije                                </h1>
+                                <p className="lead text-white">
+                                Ali potrebujete rezervacijo za sprehajalca psov, frizerja ali kaj drugega? To lahko enostavno storite preko naše spletne strani.                           </p>
+                            </Col>
+                        </Row>
+                    </div>
+                </Container>
             </section>
             <main>
                 <Container>
-                    <h2 className="text-center display-2 mb-5">Rezervacija</h2>
+                <br/>
+
                     <Row>
                         {categories.map((category, index) => (
                             <Col md="12" key={index}>
