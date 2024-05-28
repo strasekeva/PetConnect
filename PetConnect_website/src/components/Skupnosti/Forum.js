@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, CardBody, CardTitle, CardText, Button, Modal, ModalHeader, ModalBody, Form, FormGroup, Label, Input, InputGroup, InputGroupAddon } from 'reactstrap';
+import { Container, Row, Col, Card, CardBody, CardTitle, CardText, Button, Modal, ModalHeader, ModalBody, Form, FormGroup, Label, Input, InputGroup, InputGroupAddon, InputGroupText } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Navbar from 'components/Navbars/Navbar.js';
@@ -9,9 +9,13 @@ import { getFirestore, collection, getDocs, addDoc, serverTimestamp, doc, getDoc
 
 const Forum = () => {
     const [topics, setTopics] = useState([]);
+    const [filteredTopics, setFilteredTopics] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
     const [newTopic, setNewTopic] = useState({ title: '', content: '' });
     const [currentUser, setCurrentUser] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState('list');
+    const [showNewOnly, setShowNewOnly] = useState(false);
     const firestore = getFirestore();
     const navigate = useNavigate();
 
@@ -43,6 +47,7 @@ const Forum = () => {
         const querySnapshot = await getDocs(collection(firestore, 'topics'));
         const topicsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setTopics(topicsList);
+        setFilteredTopics(topicsList);
     };
 
     useEffect(() => {
@@ -65,6 +70,95 @@ const Forum = () => {
         navigate(`/forum/${topicId}`);
     };
 
+    const handleSearchChange = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        applyFilters(query, showNewOnly);
+    };
+
+    const handleCheckboxChange = (e) => {
+        const isChecked = e.target.checked;
+        setShowNewOnly(isChecked);
+        applyFilters(searchQuery, isChecked);
+    };
+
+    const applyFilters = (query, newOnly) => {
+        let filtered = topics;
+        if (query) {
+            filtered = filtered.filter(topic => topic.title.toLowerCase().includes(query.toLowerCase()));
+        }
+        if (newOnly) {
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            filtered = filtered.filter(topic => new Date(topic.date.seconds * 1000) > oneWeekAgo);
+        }
+        setFilteredTopics(filtered);
+    };
+
+    const renderList = () => {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        return (
+            <Row>
+                <Col md="3">
+                    <Card>
+                        <CardBody>
+                            <p className="mb-3">Išči forum:</p>
+                            <InputGroup>
+                                <InputGroupAddon addonType="prepend">
+                                    <InputGroupText>
+                                        <FontAwesomeIcon icon={faSearch} />
+                                    </InputGroupText>
+                                </InputGroupAddon>
+                                <Input 
+                                    type="text" 
+                                    placeholder="Vtipkaj iskalni niz" 
+                                    value={searchQuery}
+                                    onChange={handleSearchChange}
+                                />
+                            </InputGroup>
+                            <FormGroup check className="mt-3">
+                                <Label check>
+                                    <Input type="checkbox" checked={showNewOnly} onChange={handleCheckboxChange} />
+                                    Pokaži samo nove
+                                </Label>
+                            </FormGroup>
+                        </CardBody>
+                        <Col className="text-center" xs="auto">
+                            <Button color="info" onClick={toggleModal}>Odpri novo temo</Button>
+                        </Col>
+                        <p></p>
+                    </Card>
+                </Col>
+                <Col md="9">
+                    <div style={{ marginTop: '3%' }}>
+                        {filteredTopics.map((topic, index) => {
+                            const isNew = new Date(topic.date.seconds * 1000) > oneWeekAgo;
+                            return (
+                                <Card key={index} className="activity-card" style={{ marginBottom: '3%', border: '1px solid #ddd', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
+                                    <CardBody>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <CardTitle tag="h3" style={{ color: '#007bff' }}>{topic.title}</CardTitle>
+                                            {isNew && <div style={{ background: 'red', color: 'white', padding: '5px', borderRadius: '5px' }}>NOVO</div>}
+                                        </div>
+                                        <CardText>{topic.content}</CardText>
+                                        <CardText>
+                                            <small className="text-muted">
+                                                Objavil/a {topic.user.email} on {new Date(topic.date.seconds * 1000).toLocaleString()}
+                                            </small>
+                                        </CardText>
+                                        <Button color="secondary" onClick={() => handleOpenForum(topic.id)}>Diskusija</Button>
+                                    </CardBody>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                </Col>
+            </Row>
+        );
+    };
+
     return (
         <div>
             <Navbar />
@@ -75,70 +169,31 @@ const Forum = () => {
             </section>
             <main>
                 <Container className="mt-5">
-                    <h2 className="text-center display-2 mb-5">Forum</h2>
-                    <Row className="justify-content-end mb-3">
-                        {currentUser && (
-                            <Button color="primary" onClick={toggleModal}>Add New Topic</Button>
-                        )}
-                    </Row>
-                    <Row className="justify-content-center mb-4">
-                        <Col md="8">
-                            <Card>
-                                <CardBody>
-                                    <p className="mb-2">Išči forum:</p>
-                                    <InputGroup>
-                                        <InputGroupAddon addonType="prepend">
-                                            <span className="input-group-text">
-                                                <FontAwesomeIcon icon={faSearch} />
-                                            </span>
-                                        </InputGroupAddon>
-                                        <Input 
-                                            type="text" 
-                                            placeholder="Začni tipkati ključno besedo" 
-                                        />
-                                    </InputGroup>
-                                </CardBody>
-                            </Card>
-                        </Col>
-                    </Row>
-                    <Row>
-                        {topics.map((topic, index) => (
-                            <Col md="12" key={index} className="mb-3">
-                                <Card>
-                                    <CardBody>
-                                        <CardTitle tag="h5">{topic.title}</CardTitle>
-                                        <CardText>{topic.content}</CardText>
-                                        <CardText>
-                                            <small className="text-muted">
-                                                Posted by {topic.user.email} on {new Date(topic.date.seconds * 1000).toLocaleString()}
-                                            </small>
-                                        </CardText>
-                                        <Button color="secondary" onClick={() => handleOpenForum(topic.id)}>Open Forum</Button>
-                                    </CardBody>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
+                    <h2 className="text-center display-2 mb-5">Forumi</h2>
+                    {viewMode === 'list' && renderList()}
+                    {currentUser && (
+                        <Row className="justify-content-center" style={{ marginTop: '20px' }}> 
+                        </Row>
+                    )}
                 </Container>
+                <Modal isOpen={modalOpen} toggle={toggleModal}>
+                    <ModalHeader toggle={toggleModal}>Odpri novo temo</ModalHeader>
+                    <ModalBody>
+                        <Form>
+                            <FormGroup>
+                                <Label for="title">Tema</Label>
+                                <Input type="text" name="title" id="title" value={newTopic.title} onChange={handleInputChange} />
+                            </FormGroup>
+                            <FormGroup>
+                                <Label for="content">Vsebina</Label>
+                                <Input type="textarea" name="content" id="content" value={newTopic.content} onChange={handleInputChange} />
+                            </FormGroup>
+                            <Button color="primary" onClick={handleAddTopic}>Dodaj novo temo</Button>
+                        </Form>
+                    </ModalBody>
+                </Modal>
             </main>
             <SimpleFooter />
-            
-            <Modal isOpen={modalOpen} toggle={toggleModal}>
-                <ModalHeader toggle={toggleModal}>Add New Topic</ModalHeader>
-                <ModalBody>
-                    <Form>
-                        <FormGroup>
-                            <Label for="title">Title</Label>
-                            <Input type="text" name="title" id="title" value={newTopic.title} onChange={handleInputChange} />
-                        </FormGroup>
-                        <FormGroup>
-                            <Label for="content">Content</Label>
-                            <Input type="textarea" name="content" id="content" value={newTopic.content} onChange={handleInputChange} />
-                        </FormGroup>
-                        <Button color="primary" onClick={handleAddTopic}>Add Topic</Button>
-                    </Form>
-                </ModalBody>
-            </Modal>
         </div>
     );
 };
