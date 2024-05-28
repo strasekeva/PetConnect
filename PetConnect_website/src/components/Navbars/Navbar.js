@@ -174,13 +174,7 @@ class DemoNavbar extends React.Component {
                     </DropdownToggle>
                     <DropdownMenu>
                       <DropdownItem to="/sledenje-zdravju" tag={Link}>
-                      Cepljenja
-                      </DropdownItem>
-                      <DropdownItem to="/sledenje-zdravju" tag={Link}>
-                      Prehrana
-                      </DropdownItem>
-                      <DropdownItem to="/sledenje-zdravju" tag={Link}>
-                      Obiski pri veterinarju
+                      Sledenje zdravju
                       </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
