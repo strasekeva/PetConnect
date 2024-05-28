@@ -39,6 +39,8 @@ import { AuthProvider } from "components/Contexts/AuthContext.js";
 import PogostaVprasanja from "components/Veterinary/PogostaVprasanja";
 import SkupinskeAktivnosti from "components/Skupnosti/SkupinskeAktivnosti";
 import Izdelki from "views/examples/Izdelki";
+import Forum from "components/Skupnosti/Forum";
+import ForumDiscussion from "components/Skupnosti/ForumDiscussion";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -59,6 +61,8 @@ root.render(
           <Route path="/nasveti" element={<ChatComponent />} />
           <Route path="/pogosta-vprasanja" element={<PogostaVprasanja />} />
           <Route path="/skupinske-aktivnosti" element={<SkupinskeAktivnosti />} />
+          <Route path="/forum" element={<Forum />} />
+          <Route path="/forum/:topicId" element={<ForumDiscussion />} />
           <Route path="/izdelki" element={<Izdelki />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
