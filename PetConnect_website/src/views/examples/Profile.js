@@ -1,15 +1,31 @@
 import React from "react";
 import { firestore } from "components/Firebase/Firebase"; // Uvozite Firestore povezavo
-import { doc, getDoc } from "firebase/firestore";
-
-import { Button, Card, Container, Row, Col } from "reactstrap";
+import { doc, getDoc, collection, getDocs, query, where, updateDoc } from "firebase/firestore";
+import { Button, Card, Container, Row, Col, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input } from "reactstrap";
 import Navbar from "components/Navbars/Navbar.js";
 import SimpleFooter from "components/Footers/SimpleFooter.js";
+import { getAuth, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 class Profile extends React.Component {
   state = {
     firstName: "",
     lastName: "",
+    email: "",
+    profilePicture: "",
+    activityCount: 0,
+    groupCount: 0,
+    forumCount: 0,
+    modal: false,
+    formData: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      profilePicture: "",
+      oldPassword: "",
+      password: "",
+      confirmPassword: "",
+    },
   };
 
   componentDidMount() {
@@ -29,6 +45,27 @@ class Profile extends React.Component {
           this.setState({
             firstName: userData.name,
             lastName: userData.surname,
+            email: userData.email,
+            profilePicture: userData.profilePicture || "",
+            formData: {
+              firstName: userData.name,
+              lastName: userData.surname,
+              email: userData.email,
+              profilePicture: userData.profilePicture || "",
+              oldPassword: "",
+              password: "",
+              confirmPassword: "",
+            }
+          });
+
+          const activityCount = await this.getActivityCount(userUid);
+          const groupCount = await this.getGroupCount(userUid);
+          const forumCount = await this.getForumCount(userUid);
+
+          this.setState({
+            activityCount,
+            groupCount,
+            forumCount,
           });
         } else {
           console.log("No such document!");
@@ -41,8 +78,99 @@ class Profile extends React.Component {
     }
   }
 
+  getActivityCount = async (userUid) => {
+    const q = query(collection(firestore, "activities"), where("user.uid", "==", userUid));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  };
+
+  getGroupCount = async (userUid) => {
+    const q = query(collection(firestore, "groups"), where("members", "array-contains", userUid));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  };
+
+  getForumCount = async (userUid) => {
+    const q = query(collection(firestore, "forums"), where("user.uid", "==", userUid));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  };
+
+  toggleModal = () => {
+    this.setState({ modal: !this.state.modal });
+  };
+
+  handleChange = (e) => {
+    const { name, value } = e.target;
+    this.setState({
+      formData: {
+        ...this.state.formData,
+        [name]: value,
+      },
+    });
+  };
+
+  handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    const storage = getStorage();
+    const storageRef = ref(storage, `profilePictures/${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    this.setState({
+      formData: {
+        ...this.state.formData,
+        profilePicture: url,
+      },
+    });
+  };
+
+  handleSubmit = async (e) => {
+    e.preventDefault();
+    const userUid = localStorage.getItem('userUid');
+    const userDoc = doc(firestore, "users", userUid);
+
+    const { oldPassword, password, confirmPassword, firstName, lastName, email, profilePicture } = this.state.formData;
+    
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (oldPassword && password === confirmPassword && password !== "") {
+      const credential = EmailAuthProvider.credential(user.email, oldPassword);
+      try {
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, password);
+      } catch (error) {
+        console.error("Error reauthenticating user:", error);
+        alert("Error reauthenticating user. Please check your old password.");
+        return;
+      }
+    }
+
+    await updateDoc(userDoc, {
+      name: firstName,
+      surname: lastName,
+      email: email,
+      profilePicture: profilePicture,
+    });
+
+    alert("Profile updated successfully!");
+    this.toggleModal();
+    this.setState({
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      profilePicture: profilePicture,
+      formData: {
+        ...this.state.formData,
+        oldPassword: "",
+        password: "",
+        confirmPassword: "",
+      }
+    });
+  };
+
   render() {
-    const { firstName, lastName } = this.state;
+    const { firstName, lastName, email, profilePicture, activityCount, groupCount, forumCount, modal, formData } = this.state;
 
     return (
       <>
@@ -85,7 +213,7 @@ class Profile extends React.Component {
                           <img
                             alt="..."
                             className="rounded-circle"
-                            src={require("assets/img/theme/team-4-800x800.jpg")}
+                            src={profilePicture || require("assets/img/theme/team-4-800x800.jpg")}
                           />
                         </a>
                       </div>
@@ -94,40 +222,29 @@ class Profile extends React.Component {
                       className="order-lg-3 text-lg-right align-self-lg-center"
                       lg="4"
                     >
-                      <div className="card-profile-actions py-4 mt-lg-0">
+                      <div className="card-profile-actions d-flex justify-content-end">
                         <Button
-                          className="mr-4"
-                          color="info"
-                          href="#pablo"
-                          onClick={(e) => e.preventDefault()}
+                          color="primary"
                           size="sm"
+                          onClick={this.toggleModal}
                         >
-                          Connect
-                        </Button>
-                        <Button
-                          className="float-right"
-                          color="default"
-                          href="#pablo"
-                          onClick={(e) => e.preventDefault()}
-                          size="sm"
-                        >
-                          Message
+                          Edit Profile
                         </Button>
                       </div>
                     </Col>
                     <Col className="order-lg-1" lg="4">
                       <div className="card-profile-stats d-flex justify-content-center">
                         <div>
-                          <span className="heading">22</span>
-                          <span className="description">Friends</span>
+                          <span className="heading">{activityCount}</span>
+                          <span className="description">Activities</span>
                         </div>
                         <div>
-                          <span className="heading">10</span>
-                          <span className="description">Photos</span>
+                          <span className="heading">{groupCount}</span>
+                          <span className="description">Groups</span>
                         </div>
                         <div>
-                          <span className="heading">89</span>
-                          <span className="description">Comments</span>
+                          <span className="heading">{forumCount}</span>
+                          <span className="description">Forums</span>
                         </div>
                       </div>
                     </Col>
@@ -135,30 +252,25 @@ class Profile extends React.Component {
                   <div className="text-center mt-5">
                     <h3>
                       {firstName} {lastName}{""}
-                      <span className="font-weight-light">, 27</span>
                     </h3>
                     <div className="h6 font-weight-300">
                       <i className="ni location_pin mr-2" />
-                      Bucharest, Romania
+                      {email}
                     </div>
                     <div className="h6 mt-4">
                       <i className="ni business_briefcase-24 mr-2" />
-                      Solution Manager - Creative Tim Officer
+                      PetConnect User
                     </div>
                     <div>
                       <i className="ni education_hat mr-2" />
-                      University of Computer Science
+                      Connecting Pet Owners
                     </div>
                   </div>
                   <div className="mt-5 py-5 border-top text-center">
                     <Row className="justify-content-center">
                       <Col lg="9">
                         <p>
-                          An artist of considerable range, Ryan — the name taken
-                          by Melbourne-raised, Brooklyn-based Nick Murphy —
-                          writes, performs and records all of his own music,
-                          giving it a warm, intimate feel with a solid groove
-                          structure. An artist of considerable range.
+                          Welcome to PetConnect! This platform helps pet owners connect with local groups, find and book pet services, get expert advice on pet health and care, and much more.
                         </p>
                         <a href="#pablo" onClick={(e) => e.preventDefault()}>
                           Show more
@@ -170,6 +282,46 @@ class Profile extends React.Component {
               </Card>
             </Container>
           </section>
+          <Modal isOpen={modal} toggle={this.toggleModal}>
+            <ModalHeader toggle={this.toggleModal}>Edit Profile</ModalHeader>
+            <Form onSubmit={this.handleSubmit}>
+              <ModalBody>
+                <FormGroup>
+                  <Label for="firstName">First Name</Label>
+                  <Input type="text" name="firstName" id="firstName" value={formData.firstName} onChange={this.handleChange} required />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="lastName">Last Name</Label>
+                  <Input type="text" name="lastName" id="lastName" value={formData.lastName} onChange={this.handleChange} required />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="email">Email</Label>
+                  <Input type="email" name="email" id="email" value={formData.email} onChange={this.handleChange} required />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="profilePicture">Profile Picture</Label>
+                  <Input type="file" name="profilePicture" id="profilePicture" onChange={this.handleImageChange} />
+                  {formData.profilePicture && <img src={formData.profilePicture} alt="Profile" style={{ width: "100px", height: "100px" }} />}
+                </FormGroup>
+                <FormGroup>
+                  <Label for="oldPassword">Old Password</Label>
+                  <Input type="password" name="oldPassword" id="oldPassword" value={formData.oldPassword} onChange={this.handleChange} />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="password">New Password</Label>
+                  <Input type="password" name="password" id="password" value={formData.password} onChange={this.handleChange} />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="confirmPassword">Confirm New Password</Label>
+                  <Input type="password" name="confirmPassword" id="confirmPassword" value={formData.confirmPassword} onChange={this.handleChange} />
+                </FormGroup>
+              </ModalBody>
+              <ModalFooter>
+                <Button type="submit" color="primary">Save Changes</Button>{' '}
+                <Button color="secondary" onClick={this.toggleModal}>Cancel</Button>
+              </ModalFooter>
+            </Form>
+          </Modal>
         </main>
         <SimpleFooter />
       </>

@@ -44,7 +44,6 @@ import ForumDiscussion from "components/Skupnosti/ForumDiscussion";
 import LokalneSkupnosti from "components/Skupnosti/LokalneSkupnosti";
 import PogovorSkupine from "components/Skupnosti/PogovorSkupine";
 
-
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
