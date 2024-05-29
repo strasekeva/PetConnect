@@ -1,0 +1,18 @@
+.feature-box {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .feature-box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .icon {
+    color: #5e72e4; /* Modra barva */
+  }
+  
+  /* Za hover učinek */
+  .icon:hover {
+    color: #233dd2; /* Temnejša modra barva */
+  }
+  
