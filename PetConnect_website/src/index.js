@@ -42,6 +42,7 @@ import Izdelki from "views/examples/Izdelki";
 import Forum from "components/Skupnosti/Forum";
 import ForumDiscussion from "components/Skupnosti/ForumDiscussion";
 import LokalneSkupnosti from "components/Skupnosti/LokalneSkupnosti";
+import PogovorSkupine from "components/Skupnosti/PogovorSkupine";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -65,6 +66,7 @@ root.render(
           <Route path="/forum" element={<Forum />} />
           <Route path="/forum/:topicId" element={<ForumDiscussion />} />
           <Route path="/lokalne-skupnosti" element={<LokalneSkupnosti />} />
+          <Route path="/pogovor-skupine/:groupId" element={<PogovorSkupine />} />
           <Route path="/izdelki" element={<Izdelki />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
