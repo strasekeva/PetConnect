@@ -16,3 +16,8 @@
     color: #233dd2; /* Temnejša modra barva */
   }
   
+  .reduce-footer-margin {
+    margin-bottom: 2 !important;
+    padding-bottom: 2 !important;
+  }
+  
