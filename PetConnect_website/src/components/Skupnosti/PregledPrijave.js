@@ -54,16 +54,13 @@ const PregledPrijave = ({ activity, currentUser, isOpen, toggle }) => {
                         <p><strong>Priimek:</strong> {registration.priimek}</p>
                         <p><strong>Email:</strong> {registration.email}</p>
                         <p><strong>Število ljudi:</strong> {registration.steviloLjudji}</p>
-                        {activity.category === 'competition' && registration.tekmovanje && (
+                        {activity.category === 'competitions' && registration.tekmovanje && (
                             <>
                                 <p><strong>Ime psa:</strong> {registration.tekmovanje.imePsa}</p>
                                 <p><strong>Pasma:</strong> {registration.tekmovanje.pasma}</p>
                                 <p><strong>Starost:</strong> {registration.tekmovanje.starost}</p>
-                                <p><strong>Področja:</strong> {registration.tekmovanje.podrocja.join(', ')}</p>
+                                <p><strong>Področja:</strong> {registration.tekmovanje.podrocja}</p>
                             </>
-                        )}
-                        {activity.isPaid && (
-                            <p><strong>Plačilo:</strong> {registration.placilo}</p>
                         )}
                     </div>
                 ) : (

@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-defaulticon-compatibility';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
+import axios from 'axios';
 import PrijavaNaAktivnost from './PrijavaNaAktivnost';
 
 const categories = [
@@ -13,20 +14,34 @@ const categories = [
     { value: 'games', label: 'Igre' },
     { value: 'health', label: 'Zdravje' },
     { value: 'competitions', label: 'Tekmovanja' },
-    { value: 'education', label: 'Izobraževanje' },
-    { value: 'adoption', label: 'Adopcija' },
-    { value: 'family', label: 'Družinski dnevi' },
-    { value: 'sports', label: 'Šport' },
-    { value: 'photography', label: 'Fotografija' },
+    { value: 'education', label: 'Izobraževanje' }
 ];
 
-const LocationSelector = ({ setLatitude, setLongitude }) => {
+const NaslovSelector = ({ setLatitude, setLongitude, setNaslov }) => {
     useMapEvents({
         click(e) {
-            setLatitude(e.latlng.lat);
-            setLongitude(e.latlng.lng);
+            const { lat, lng } = e.latlng;
+            setLatitude(lat);
+            setLongitude(lng);
+            fetchAddress(lat, lng, setNaslov);
         }
     });
+
+    const fetchAddress = async (lat, lng, setNaslov) => {
+        try {
+            const response = await axios.get(`https://nominatim.openstreetmap.org/reverse`, {
+                params: {
+                    lat,
+                    lon: lng,
+                    format: 'json'
+                }
+            });
+            const address = response.data.display_name;
+            setNaslov(address);
+        } catch (error) {
+            console.error('Error fetching address: ', error);
+        }
+    };
 
     return null;
 };
@@ -35,6 +50,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
+    const [naslov, setNaslov] = useState('');
     const [latitude, setLatitude] = useState(46.5547); // Privzeto na Maribor
     const [longitude, setLongitude] = useState(15.6459); // Privzeto na Maribor
     const [date, setDate] = useState('');
@@ -42,8 +58,6 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
     const [category, setCategory] = useState('');
     const [registrationRequired, setRegistrationRequired] = useState('no');
     const [availableSeats, setAvailableSeats] = useState('');
-    const [free, setFree] = useState('yes');
-    const [price, setPrice] = useState('');
     const [userData, setUserData] = useState(null);
 
     useEffect(() => {
@@ -51,6 +65,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
             setName(activity.name);
             setDescription(activity.description);
             setLocation(activity.location);
+            setNaslov(activity.naslov);
             setLatitude(activity.latitude);
             setLongitude(activity.longitude);
             setDate(new Date(activity.date.seconds * 1000).toISOString().substr(0, 10));
@@ -58,8 +73,6 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
             setCategory(activity.category || '');
             setRegistrationRequired(activity.registrationRequired || 'no');
             setAvailableSeats(activity.availableSeats || '');
-            setFree(activity.free || 'yes');
-            setPrice(activity.price || '');
         }
     }, [activity]);
 
@@ -89,15 +102,15 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
             name,
             description,
             location,
+            naslov,
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
             date: Timestamp.fromDate(activityDate), // Pretvori datum in čas v Firestore Timestamp
             category,
             registrationRequired,
             availableSeats: registrationRequired === 'yes' ? parseInt(availableSeats, 10) : '',
-            free,
-            price: free === 'no' ? parseFloat(price) : '',
-            user: userData ? { uid: localStorage.getItem('userUid'), email: userData.email } : null // Add user information
+            user: userData ? { uid: localStorage.getItem('userUid'), email: userData.email } : null, // Add user information,
+            createdAt: activity ? activity.createdAt : new Date() // Use existing createdAt if updating, or set new date
         };
         try {
             if (activity) {
@@ -105,9 +118,11 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                 await updateDoc(doc(firestore, 'activities', activity.id), activityData);
                 onSave(activityData);
             } else {
-                await addDoc(collection(firestore, 'activities'), activityData);
-                onClose();
+                const docRef = await addDoc(collection(firestore, 'activities'), activityData);
+                activityData.id = docRef.id;
+                onSave(activityData);
             }
+            onClose();
         } catch (error) {
             console.error("Error saving activity: ", error);
         }
@@ -115,6 +130,23 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
 
     return (
         <Form onSubmit={handleSubmit}>
+                        <FormGroup>
+                <Label for="category">Kategorija</Label>
+                <Input
+                    type="select"
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                >
+                    <option value="">Izberite kategorijo</option>
+                    {categories.map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                        </option>
+                    ))}
+                </Input>
+            </FormGroup>
             <FormGroup>
                 <Label for="name">Ime aktivnosti</Label>
                 <Input
@@ -143,6 +175,17 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     required
+                />
+            </FormGroup>
+            <FormGroup>
+                <Label for="naslov">Naslov</Label>
+                <Input
+                    type="text"
+                    id="naslov"
+                    value={naslov}
+                    onChange={(e) => setNaslov(e.target.value)}
+                    required
+                    readOnly
                 />
             </FormGroup>
             <FormGroup>
@@ -187,32 +230,11 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                     required
                 />
             </FormGroup>
-            <FormGroup>
-                <Label for="category">Kategorija</Label>
-                <Input
-                    type="select"
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    required
-                >
-                    <option value="">Izberite kategorijo</option>
-                    {categories.map((cat) => (
-                        <option key={cat.value} value={cat.value}>
-                            {cat.label}
-                        </option>
-                    ))}
-                </Input>
-            </FormGroup>
             <PrijavaNaAktivnost
                 registrationRequired={registrationRequired}
                 setRegistrationRequired={setRegistrationRequired}
                 availableSeats={availableSeats}
                 setAvailableSeats={setAvailableSeats}
-                free={free}
-                setFree={setFree}
-                price={price}
-                setPrice={setPrice}
             />
             <div style={{ height: '300px', marginBottom: '20px' }}>
                 <MapContainer center={[latitude, longitude]} zoom={13} style={{ height: '100%', width: '100%' }}>
@@ -221,7 +243,7 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
                     <Marker position={[latitude, longitude]} />
-                    <LocationSelector setLatitude={setLatitude} setLongitude={setLongitude} />
+                    <NaslovSelector setLatitude={setLatitude} setLongitude={setLongitude}  setNaslov={setNaslov}/>
                 </MapContainer>
             </div>
             <Button type="submit" color="primary">{activity ? 'Update Activity' : 'Add Activity'}</Button>

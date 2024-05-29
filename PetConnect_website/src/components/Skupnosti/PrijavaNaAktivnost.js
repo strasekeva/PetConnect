@@ -28,31 +28,6 @@ const PrijavaNaAktivnost = ({ registrationRequired, setRegistrationRequired, ava
                     />
                 </FormGroup>
             )}
-            <FormGroup>
-                <Label for="free">Brezplačno</Label>
-                <Input
-                    type="select"
-                    id="free"
-                    value={free}
-                    onChange={(e) => setFree(e.target.value)}
-                >
-                    <option value="yes">Da</option>
-                    <option value="no">Ne</option>
-                </Input>
-            </FormGroup>
-            {free === 'no' && (
-                <FormGroup>
-                    <Label for="price">Cena</Label>
-                    <Input
-                        type="number"
-                        id="price"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        min="0"
-                    />
-                    <FormText color="muted">Vpišite ceno v EUR.</FormText>
-                </FormGroup>
-            )}
         </>
     );
 };

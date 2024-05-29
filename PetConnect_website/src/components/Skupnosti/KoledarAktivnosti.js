@@ -1,12 +1,14 @@
+// KoledarAktivnosti.js
 import React, { useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Card, CardBody, CardTitle, CardSubtitle, CardText, Row, Col } from 'reactstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Row, Col } from 'reactstrap';
+import ActivityCard from './ActivityCard';
 import { categoryIcons, categories } from './Constants';
 
-const KoledarAktivnosti = ({ activities, onDateSelect }) => {
+const KoledarAktivnosti = ({ activities, onDateSelect, currentUser, handleButtonClick, handleViewRegistrationDetails, handleViewRegisteredUsers, startEditing, deleteActivity }) => {
     const [selectedDate, setSelectedDate] = useState(null);
+    const [filteredActivities, setFilteredActivities] = useState([]);
 
     const isSoon = (date) => {
         const oneWeekFromNow = new Date();
@@ -20,9 +22,12 @@ const KoledarAktivnosti = ({ activities, onDateSelect }) => {
         return date.seconds * 1000 >= oneDayAgo.getTime();
     };
 
-    const handleDateClick = (value) => {
-        setSelectedDate(value);
-        onDateSelect(value);
+    const handleDateClick = (date) => {
+        setSelectedDate(date);
+        const filteredByDate = activities.filter(
+            activity => new Date(activity.date.seconds * 1000).toDateString() === date.toDateString()
+        );
+        setFilteredActivities(filteredByDate);
     };
 
     return (
@@ -31,16 +36,18 @@ const KoledarAktivnosti = ({ activities, onDateSelect }) => {
                 <Col md="6">
                     <Calendar
                         tileContent={({ date, view }) => {
-                            const dayActivities = activities.filter(
-                                activity => new Date(activity.date.seconds * 1000).toDateString() === date.toDateString()
-                            );
-                            return (
-                                <div>
-                                    {dayActivities.map(activity => (
-                                        <span key={activity.id} style={{ backgroundColor: categoryIcons[activity.category]?.color || 'black', display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', margin: '2px' }} />
-                                    ))}
-                                </div>
-                            );
+                            if (view === 'month') {
+                                const dayActivities = activities.filter(
+                                    activity => new Date(activity.date.seconds * 1000).toDateString() === date.toDateString()
+                                );
+                                return (
+                                    <div>
+                                        {dayActivities.map(activity => (
+                                            <span key={activity.id} style={{ backgroundColor: categoryIcons[activity.category]?.color || 'black', display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', margin: '2px' }} />
+                                        ))}
+                                    </div>
+                                );
+                            }
                         }}
                         onClickDay={handleDateClick}
                         style={{ width: '100%' }}
@@ -64,22 +71,19 @@ const KoledarAktivnosti = ({ activities, onDateSelect }) => {
                     {activities.filter(
                         activity => new Date(activity.date.seconds * 1000).toDateString() === selectedDate.toDateString()
                     ).map((activity, index) => (
-                        <Card key={index} className="activity-card" style={{ marginBottom: '3%', border: '1px solid #ddd', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
-                            <div style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '24px', color: categoryIcons[activity.category]?.color || 'black' }}>
-                                <FontAwesomeIcon icon={categoryIcons[activity.category]?.icon} />
-                            </div>
-                            <CardBody>
-                                {isNew(activity.date) && <span className="badge badge-success">Novo</span>}
-                                {isSoon(activity.date) && <span className="badge badge-warning">Kmalu</span>}
-                                <CardTitle tag="h3" style={{ color: '#007bff' }}>{activity.name}</CardTitle>
-                                <CardSubtitle tag="h6" className="mb-2 text-muted">{new Date(activity.date.seconds * 1000).toLocaleDateString()} {new Date(activity.date.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</CardSubtitle>
-                                <CardText>{activity.description}</CardText>
-                                <CardText><strong>Lokacija:</strong> {activity.location}</CardText>
-                                {activity.user && (
-                                    <CardText><strong>Posted by:</strong> {activity.user.email}</CardText>
-                                )}
-                            </CardBody>
-                        </Card>
+                        <ActivityCard
+                            key={index}
+                            activity={activity}
+                            currentUser={currentUser}
+                            handleButtonClick={handleButtonClick}
+                            handleViewRegistrationDetails={handleViewRegistrationDetails}
+                            handleViewRegisteredUsers={handleViewRegisteredUsers}
+                            startEditing={startEditing}
+                            deleteActivity={deleteActivity}
+                            categoryIcons={categoryIcons}
+                            isNew={isNew}
+                            isSoon={isSoon}
+                        />
                     ))}
                 </div>
             )}
