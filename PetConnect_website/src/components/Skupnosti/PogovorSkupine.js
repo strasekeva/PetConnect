@@ -4,6 +4,8 @@ import { getFirestore, doc, getDoc, updateDoc, arrayUnion, arrayRemove, collecti
 import Navbar from 'components/Navbars/Navbar.js';
 import SimpleFooter from 'components/Footers/SimpleFooter.js';
 import { Container, Card, CardBody, CardTitle, CardText, Button, Form, FormGroup, Label, Input } from 'reactstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBookmark } from '@fortawesome/free-solid-svg-icons';
 
 const PogovorSkupine = () => {
     const { groupId } = useParams();
@@ -20,6 +22,9 @@ const PogovorSkupine = () => {
             const docSnap = await getDoc(groupDoc);
             if (docSnap.exists()) {
                 const groupData = docSnap.data();
+                if (!groupData.members) {
+                    groupData.members = [];
+                }
                 setGroup(groupData);
 
                 // Add owner to members if not already present
@@ -122,12 +127,15 @@ const PogovorSkupine = () => {
                     {group ? (
                         <Card>
                             <CardBody>
-                                <CardTitle tag="h3">
-                                    {group.name}
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <CardTitle tag="h3">{group.name}</CardTitle>
                                     {currentUser && group.members && group.members.includes(currentUser.uid) && (
-                                        <span style={{ marginLeft: '10px', color: '#28a745' }}>(Tvoja skupina)</span>
+                                        <div style={{ color: '#28a745', display: 'flex', alignItems: 'center' }}>
+                                            <FontAwesomeIcon icon={faBookmark} />
+                                            <span style={{ marginLeft: '5px' }}>Moja skupina</span>
+                                        </div>
                                     )}
-                                </CardTitle>
+                                </div>
                                 <CardText>{group.description}</CardText>
                                 <CardText>
                                     <small className="text-muted">
@@ -136,25 +144,24 @@ const PogovorSkupine = () => {
                                 </CardText>
                                 {currentUser && currentUser.uid === group.user.uid ? (
                                     <>
-                                        <Button color="primary" onClick={() => navigate(`/edit-group/${groupId}`)}>Uredi</Button>
-                                        <h5 className="mt-4">Join Requests</h5>
+                                        <h5 className="mt-4">Prošnje za pridružitev</h5>
                                         {group.joinRequests && group.joinRequests.length > 0 ? (
                                             group.joinRequests.map((request, index) => (
                                                 <div key={index}>
                                                     <span>{request}</span>
-                                                    <Button color="success" onClick={() => handleApproveRequest(request)}>Approve</Button>
-                                                    <Button color="danger" onClick={() => handleRejectRequest(request)}>Reject</Button>
+                                                    <Button color="success" onClick={() => handleApproveRequest(request)}>Sprejmi</Button>
+                                                    <Button color="danger" onClick={() => handleRejectRequest(request)}>Zavrni</Button>
                                                 </div>
                                             ))
                                         ) : (
-                                            <p>No join requests</p>
+                                            <p>Ni novih prošenj za pridružitev</p>
                                         )}
                                     </>
                                 ) : (
                                     currentUser &&
                                     !group.members?.includes(currentUser.uid) &&
                                     !group.joinRequests?.includes(currentUser.uid) && (
-                                        <Button color="primary" onClick={handleJoinGroup}>Request to Join</Button>
+                                        <Button color="primary" onClick={handleJoinGroup}>Pošlji prošnjo za pridružitev</Button>
                                     )
                                 )}
                             </CardBody>
@@ -164,7 +171,7 @@ const PogovorSkupine = () => {
                     )}
                     {currentUser && group && group.members && group.members.includes(currentUser.uid) && (
                         <div className="mt-5">
-                            <h4>Skupinski Pogovor</h4>
+                            <h4>Pogovor skupine</h4>
                             <Card className="mb-3">
                                 <CardBody style={{ maxHeight: '400px', overflowY: 'auto' }}>
                                     {messages.length > 0 ? (
@@ -194,7 +201,6 @@ const PogovorSkupine = () => {
                             </Card>
                             <Form inline onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
                                 <FormGroup className="mb-2 mr-sm-2 mb-sm-0" style={{ width: '100%' }}>
-                                    <Label for="message" className="mr-sm-2">Sporočilo</Label>
                                     <Input
                                         type="text"
                                         name="message"
@@ -202,7 +208,7 @@ const PogovorSkupine = () => {
                                         placeholder="Vnesi sporočilo"
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
-                                        style={{ width: '80%' }}
+                                        style={{ width: '82%' }}
                                     />
                                     <Button color="primary" style={{ width: '18%' }}>Pošlji</Button>
                                 </FormGroup>

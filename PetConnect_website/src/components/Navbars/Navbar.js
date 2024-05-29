@@ -135,7 +135,7 @@ class DemoNavbar extends React.Component {
                       Forum
                       </DropdownItem>
                       <DropdownItem to="/lokalne-skupnosti" tag={Link}>
-                      Lokalne skupine
+                      Moje skupine
                       </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
