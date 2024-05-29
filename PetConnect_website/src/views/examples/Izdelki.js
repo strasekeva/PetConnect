@@ -219,9 +219,85 @@ const Izdelki = () => {
         <div className="container mt-5">
           {currentUser && (
             <form onSubmit={handleSubmit}>
-              {/* Vaš obrazec za dodajanje ocen */}
-            </form>
-          )}
+            <h2>{editingReviewId ? 'Uredi oceno' : 'Priporočila izdelkov za vašega ljubljenčka'}</h2>
+            <div className="form-group">
+              <label>Kategorija:</label>
+              <select
+                className="form-control"
+                name="category"
+                value={newReview.category}
+                onChange={(e) => setNewReview({ ...newReview, category: e.target.value })}
+                required
+              >
+                <option value="">Izberite kategorijo</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Naziv izdelka:</label>
+              <input
+                type="text"
+                className="form-control"
+                name="productName"
+                value={newReview.productName}
+                onChange={(e) => setNewReview({ ...newReview, productName: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Opis izdelka:</label>
+              <textarea
+                className="form-control"
+                name="description"
+                value={newReview.description}
+                onChange={(e) => setNewReview({ ...newReview, description: e.target.value })}
+                required
+              ></textarea>
+            </div>
+            <div className="form-group">
+              <label>Ocena:</label>
+              <div>
+                {[...Array(5)].map((star, index) => {
+                  const ratingValue = index + 1;
+                  return (
+                    <label key={index}>
+                      <input
+                        type="radio"
+                        name="rating"
+                        value={ratingValue}
+                        onClick={() => setNewReview({ ...newReview, rating: ratingValue })}
+                        required
+                      />
+                      <FaStar
+                        className="star"
+                        color={ratingValue <= (hover || newReview.rating) ? "#ffc107" : "#e4e5e9"}
+                        size={25}
+                        onMouseEnter={() => setHover(ratingValue)}
+                        onMouseLeave={() => setHover(newReview.rating)}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Slika izdelka:</label>
+              <input
+                type="file"
+                className="form-control-file"
+                name="image"
+                onChange={handleImageChange}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary">
+              {editingReviewId ? 'Shrani spremembe' : 'Dodaj oceno'}
+            </button>
+          </form>
+        )}
     
           <div className="mt-5">
             <h3>Ocene in priporočila</h3>
