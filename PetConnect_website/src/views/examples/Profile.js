@@ -1,11 +1,13 @@
 import React from "react";
 import { firestore } from "components/Firebase/Firebase"; // Uvozite Firestore povezavo
-import { doc, getDoc, collection, getDocs, query, where, updateDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where, updateDoc, setDoc } from "firebase/firestore";
 import { Button, Card, Container, Row, Col, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input } from "reactstrap";
 import Navbar from "components/Navbars/Navbar.js";
 import SimpleFooter from "components/Footers/SimpleFooter.js";
 import { getAuth, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+const DEFAULT_PROFILE_PICTURE_URL = "https://firebasestorage.googleapis.com/v0/b/petconnect-d446b.appspot.com/o/profilePictures%2Fdefault.jpg?alt=media";
 
 class Profile extends React.Component {
   state = {
@@ -16,7 +18,9 @@ class Profile extends React.Component {
     activityCount: 0,
     groupCount: 0,
     forumCount: 0,
+    petPhotos: [],
     modal: false,
+    uploadModal: false,
     formData: {
       firstName: "",
       lastName: "",
@@ -25,6 +29,8 @@ class Profile extends React.Component {
       oldPassword: "",
       password: "",
       confirmPassword: "",
+      petName: "",
+      photoDescription: ""
     },
   };
 
@@ -46,26 +52,30 @@ class Profile extends React.Component {
             firstName: userData.name,
             lastName: userData.surname,
             email: userData.email,
-            profilePicture: userData.profilePicture || "",
+            profilePicture: userData.profilePicture || DEFAULT_PROFILE_PICTURE_URL,
             formData: {
               firstName: userData.name,
               lastName: userData.surname,
               email: userData.email,
-              profilePicture: userData.profilePicture || "",
+              profilePicture: userData.profilePicture || DEFAULT_PROFILE_PICTURE_URL,
               oldPassword: "",
               password: "",
               confirmPassword: "",
+              petName: "",
+              photoDescription: ""
             }
           });
 
           const activityCount = await this.getActivityCount(userUid);
           const groupCount = await this.getGroupCount(userUid);
           const forumCount = await this.getForumCount(userUid);
+          const petPhotos = await this.fetchPetPhotos(userUid);
 
           this.setState({
             activityCount,
             groupCount,
             forumCount,
+            petPhotos
           });
         } else {
           console.log("No such document!");
@@ -96,8 +106,18 @@ class Profile extends React.Component {
     return querySnapshot.size;
   };
 
+  fetchPetPhotos = async (userUid) => {
+    const q = query(collection(firestore, "petPhotos"), where("userUid", "==", userUid));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data());
+  };
+
   toggleModal = () => {
     this.setState({ modal: !this.state.modal });
+  };
+
+  toggleUploadModal = () => {
+    this.setState({ uploadModal: !this.state.uploadModal });
   };
 
   handleChange = (e) => {
@@ -124,13 +144,39 @@ class Profile extends React.Component {
     });
   };
 
+  handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    const storageRef = ref(getStorage(), `petPhotos/${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    const newPhoto = {
+      userUid: localStorage.getItem('userUid'),
+      url,
+      petName: this.state.formData.petName,
+      description: this.state.formData.photoDescription
+    };
+
+    const newPhotoRef = doc(collection(firestore, "petPhotos"));
+    await setDoc(newPhotoRef, newPhoto);
+
+    this.setState({ 
+      petPhotos: [...this.state.petPhotos, newPhoto],
+      formData: {
+        ...this.state.formData,
+        petName: "",
+        photoDescription: ""
+      }
+    });
+  };
+
   handleSubmit = async (e) => {
     e.preventDefault();
     const userUid = localStorage.getItem('userUid');
     const userDoc = doc(firestore, "users", userUid);
 
     const { oldPassword, password, confirmPassword, firstName, lastName, email, profilePicture } = this.state.formData;
-    
+
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -170,7 +216,7 @@ class Profile extends React.Component {
   };
 
   render() {
-    const { firstName, lastName, email, profilePicture, activityCount, groupCount, forumCount, modal, formData } = this.state;
+    const { firstName, lastName, email, profilePicture, activityCount, groupCount, forumCount, petPhotos, modal, uploadModal, formData } = this.state;
 
     return (
       <>
@@ -213,7 +259,7 @@ class Profile extends React.Component {
                           <img
                             alt="..."
                             className="rounded-circle"
-                            src={profilePicture || require("assets/img/theme/team-4-800x800.jpg")}
+                            src={profilePicture || DEFAULT_PROFILE_PICTURE_URL}
                           />
                         </a>
                       </div>
@@ -257,26 +303,44 @@ class Profile extends React.Component {
                       <i className="ni location_pin mr-2" />
                       {email}
                     </div>
-                    <div className="h6 mt-4">
-                      <i className="ni business_briefcase-24 mr-2" />
-                      PetConnect User
-                    </div>
-                    <div>
-                      <i className="ni education_hat mr-2" />
-                      Connecting Pet Owners
-                    </div>
                   </div>
                   <div className="mt-5 py-5 border-top text-center">
                     <Row className="justify-content-center">
-                      <Col lg="9">
-                        <p>
-                          Welcome to PetConnect! This platform helps pet owners connect with local groups, find and book pet services, get expert advice on pet health and care, and much more.
-                        </p>
-                        <a href="#pablo" onClick={(e) => e.preventDefault()}>
-                          Show more
-                        </a>
+                      <Col lg="12">
+                        <h3 className="text-center display-3 mb-0">Moji hišni ljubljenčki</h3>
+                        <br />
+                        <div className="d-flex flex-column align-items-start">
+                          {petPhotos.map((photo, index) => (
+                            <div key={index} className="d-flex align-items-start mb-3">
+                              <img src={photo.url} alt="Pet" style={{ width: "100%", height: "200px", marginRight: "10px" }} />
+                              <div>
+                                <h5>{photo.petName}</h5>
+                                <p>{photo.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                          <Button color="primary" onClick={() => this.setState({ uploadModal: true })}>Dodaj hišnega ljubljenčka</Button>
+                        </div>
                       </Col>
                     </Row>
+                    <Modal isOpen={uploadModal} toggle={this.toggleUploadModal}>
+                      <ModalHeader toggle={this.toggleUploadModal}>Upload Pet Photo</ModalHeader>
+                      <ModalBody>
+                        <FormGroup>
+                          <Label for="petName">Pet Name</Label>
+                          <Input type="text" name="petName" id="petName" value={formData.petName} onChange={this.handleChange} />
+                        </FormGroup>
+                        <FormGroup>
+                          <Label for="photoDescription">Photo Description</Label>
+                          <Input type="text" name="photoDescription" id="photoDescription" value={formData.photoDescription} onChange={this.handleChange} />
+                        </FormGroup>
+                        <Input type="file" onChange={this.handleImageUpload}/>
+                      </ModalBody>
+                      <ModalFooter>
+                        <Button color="primary">Add</Button>
+                        <Button color="secondary" onClick={this.toggleUploadModal}>Cancel</Button>
+                      </ModalFooter>
+                    </Modal>
                   </div>
                 </div>
               </Card>

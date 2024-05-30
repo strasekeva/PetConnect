@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardBody, CardTitle, CardSubtitle, CardText, Button, Row, Col } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link } from 'react-router-dom';
 
 const ActivityCard = ({
     activity,
@@ -34,7 +35,7 @@ const ActivityCard = ({
                 <CardText><strong>Lokacija:</strong> {activity.location}</CardText>
                 <CardText><strong>Naslov:</strong> {activity.naslov}</CardText>
                 {activity.user && (
-                    <CardText><strong>Posted by:</strong> {activity.user.email}</CardText>
+                    <CardText><strong>Posted by:</strong> <Link to={`/profile/${activity.user.uid}`}>{activity.user.email}</Link></CardText>
                 )}
                 <div>
                     {activity.registrationRequired === 'yes' && (!currentUser || currentUser.uid !== activity.user.uid) && (
