@@ -64,7 +64,7 @@ const Izdelki = () => {
     const fetchUserLikedReviews = async () => {
       if (currentUser) {
         try {
-          const querySnapshot = await getDocs(collection(firestore, 'userLikes', currentUser.uid));
+          const querySnapshot = await getDocs(collection(firestore, 'users', currentUser.uid, 'userLikes'));
           const likedReviews = querySnapshot.docs.map(doc => doc.id);
           setUserLikedReviews(likedReviews);
         } catch (error) {
@@ -76,7 +76,7 @@ const Izdelki = () => {
     const fetchUserDislikedReviews = async () => {
       if (currentUser) {
         try {
-          const querySnapshot = await getDocs(collection(firestore, 'userDislikes', currentUser.uid));
+          const querySnapshot = await getDocs(collection(firestore, 'users', currentUser.uid, 'userDislikes'));
           const dislikedReviews = querySnapshot.docs.map(doc => doc.id);
           setUserDislikedReviews(dislikedReviews);
         } catch (error) {
@@ -161,6 +161,7 @@ const Izdelki = () => {
           const productData = productDoc.data();
           await updateDoc(productRef, { likes: (productData.likes || 0) + 1 });
           setProducts(products.map(product => product.id === id ? { ...product, likes: (product.likes || 0) + 1 } : product));
+          await addDoc(collection(firestore, 'users', currentUser.uid, 'userLikes'), { reviewId: id });
           setUserLikedReviews([...userLikedReviews, id]);
         }
       } else if (userLikedReviews.includes(id)) {
@@ -170,6 +171,8 @@ const Izdelki = () => {
           const productData = productDoc.data();
           await updateDoc(productRef, { likes: (productData.likes || 0) - 1 });
           setProducts(products.map(product => product.id === id ? { ...product, likes: (product.likes || 0) - 1 } : product));
+          const likeDocRef = doc(firestore, 'users', currentUser.uid, 'userLikes', id);
+          await deleteDoc(likeDocRef);
           setUserLikedReviews(userLikedReviews.filter(reviewId => reviewId !== id));
         }
       }
@@ -187,6 +190,7 @@ const Izdelki = () => {
           const productData = productDoc.data();
           await updateDoc(productRef, { dislikes: (productData.dislikes || 0) + 1 });
           setProducts(products.map(product => product.id === id ? { ...product, dislikes: (product.dislikes || 0) + 1 } : product));
+          await addDoc(collection(firestore, 'users', currentUser.uid, 'userDislikes'), { reviewId: id });
           setUserDislikedReviews([...userDislikedReviews, id]);
         }
       } else if (userDislikedReviews.includes(id)) {
@@ -196,6 +200,8 @@ const Izdelki = () => {
           const productData = productDoc.data();
           await updateDoc(productRef, { dislikes: (productData.dislikes || 0) - 1 });
           setProducts(products.map(product => product.id === id ? { ...product, dislikes: (product.dislikes || 0) - 1 } : product));
+          const dislikeDocRef = doc(firestore, 'users', currentUser.uid, 'userDislikes', id);
+          await deleteDoc(dislikeDocRef);
           setUserDislikedReviews(userDislikedReviews.filter(reviewId => reviewId !== id));
         }
       }
@@ -203,11 +209,16 @@ const Izdelki = () => {
       console.error('Error disliking document: ', error);
     }
   };
-  
-  const filteredProducts = selectedCategory
-    ? products.filter(product => product.category === selectedCategory)
-    : products;
 
+    const filteredProducts = selectedCategory
+        ? products.filter(product => product.category === selectedCategory)
+        : products;
+
+    const [showForm, setShowForm] = useState(false);
+
+    const toggleForm = () => {
+      setShowForm(!showForm);
+    };
     return (
       <>
         <Navbar />
@@ -218,87 +229,93 @@ const Izdelki = () => {
         </section>
         <div className="container mt-5">
           {currentUser && (
-            <form onSubmit={handleSubmit}>
-            <h2>{editingReviewId ? 'Uredi oceno' : 'Priporočila izdelkov za vašega ljubljenčka'}</h2>
-            <div className="form-group">
-              <label>Kategorija:</label>
-              <select
-                className="form-control"
-                name="category"
-                value={newReview.category}
-                onChange={(e) => setNewReview({ ...newReview, category: e.target.value })}
-                required
-              >
-                <option value="">Izberite kategorijo</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+            <div>
+              <button onClick={toggleForm} className="btn btn-primary">
+                {showForm ? 'Skrij obrazec' : 'Dodaj oceno'}
+              </button>
+              {showForm && (
+                <form onSubmit={handleSubmit}>
+                  <h2>{editingReviewId ? 'Uredi oceno' : 'Priporočila izdelkov za vašega ljubljenčka'}</h2>
+                  <div className="form-group">
+                    <label>Kategorija:</label>
+                    <select
+                      className="form-control"
+                      name="category"
+                      value={newReview.category}
+                      onChange={(e) => setNewReview({ ...newReview, category: e.target.value })}
+                      required
+                    >
+                      <option value="">Izberite kategorijo</option>
+                      {categories.map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Naziv izdelka:</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="productName"
+                      value={newReview.productName}
+                      onChange={(e) => setNewReview({ ...newReview, productName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Opis izdelka:</label>
+                    <textarea
+                      className="form-control"
+                      name="description"
+                      value={newReview.description}
+                      onChange={(e) => setNewReview({ ...newReview, description: e.target.value })}
+                      required
+                    ></textarea>
+                  </div>
+                  <div className="form-group">
+                    <label>Ocena:</label>
+                    <div>
+                      {[...Array(5)].map((star, index) => {
+                        const ratingValue = index + 1;
+                        return (
+                          <label key={index}>
+                            <input
+                              type="radio"
+                              name="rating"
+                              value={ratingValue}
+                              onClick={() => setNewReview({ ...newReview, rating: ratingValue })}
+                              required
+                            />
+                            <FaStar
+                              className="star"
+                              color={ratingValue <= (hover || newReview.rating) ? "#ffc107" : "#e4e5e9"}
+                              size={25}
+                              onMouseEnter={() => setHover(ratingValue)}
+                              onMouseLeave={() => setHover(newReview.rating)}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Slika izdelka:</label>
+                    <input
+                      type="file"
+                      className="form-control-file"
+                      name="image"
+                      onChange={handleImageChange}
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-primary">
+                    {editingReviewId ? 'Shrani spremembe' : 'Dodaj oceno'}
+                  </button>
+                </form>
+              )}
             </div>
-            <div className="form-group">
-              <label>Naziv izdelka:</label>
-              <input
-                type="text"
-                className="form-control"
-                name="productName"
-                value={newReview.productName}
-                onChange={(e) => setNewReview({ ...newReview, productName: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Opis izdelka:</label>
-              <textarea
-                className="form-control"
-                name="description"
-                value={newReview.description}
-                onChange={(e) => setNewReview({ ...newReview, description: e.target.value })}
-                required
-              ></textarea>
-            </div>
-            <div className="form-group">
-              <label>Ocena:</label>
-              <div>
-                {[...Array(5)].map((star, index) => {
-                  const ratingValue = index + 1;
-                  return (
-                    <label key={index}>
-                      <input
-                        type="radio"
-                        name="rating"
-                        value={ratingValue}
-                        onClick={() => setNewReview({ ...newReview, rating: ratingValue })}
-                        required
-                      />
-                      <FaStar
-                        className="star"
-                        color={ratingValue <= (hover || newReview.rating) ? "#ffc107" : "#e4e5e9"}
-                        size={25}
-                        onMouseEnter={() => setHover(ratingValue)}
-                        onMouseLeave={() => setHover(newReview.rating)}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Slika izdelka:</label>
-              <input
-                type="file"
-                className="form-control-file"
-                name="image"
-                onChange={handleImageChange}
-              />
-            </div>
-            <button type="submit" className="btn btn-primary">
-              {editingReviewId ? 'Shrani spremembe' : 'Dodaj oceno'}
-            </button>
-          </form>
-        )}
-    
+          )}
           <div className="mt-5">
             <h3>Ocene in priporočila</h3>
             <div className="form-group">
@@ -370,29 +387,29 @@ const Izdelki = () => {
                     <p><strong>Objavil:</strong> {product.userEmail}</p>
                     <div className="mt-2">
                       <button
-                        className={`btn btn-success btn-sm mr-2 ${userLikedReviews.includes(product.id) ? 'disabled' : ''}`}
-                        onClick={() => handleLike(product.id)}
-                        disabled={userLikedReviews.includes(product.id)}
+                        className={`btn btn-success btn-sm mr-2 ${!currentUser ? 'disabled' : userLikedReviews.includes(product.id) ? 'disabled' : ''}`}
+                        onClick={() => currentUser ? handleLike(product.id) : alert("Samo za prijavljene uporabnike")}
+                        disabled={!currentUser || userLikedReviews.includes(product.id)}
                       >
                         <FaThumbsUp /> {product.likes || 0}
                       </button>
                       <button
-                        className={`btn btn-danger btn-sm ${userDislikedReviews.includes(product.id) ? 'disabled' : ''}`}
-                        onClick={() => handleDislike(product.id)}
-                        disabled={userDislikedReviews.includes(product.id)}
+                        className={`btn btn-danger btn-sm ${!currentUser ? 'disabled' : userDislikedReviews.includes(product.id) ? 'disabled' : ''}`}
+                        onClick={() => currentUser ? handleDislike(product.id) : alert("Samo za prijavljene uporabnike")}
+                        disabled={!currentUser || userDislikedReviews.includes(product.id)}
                       >
                         <FaThumbsDown /> {product.dislikes || 0}
                       </button>
                     </div>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
-        <SimpleFooter />
-      </>
-    );
+          <SimpleFooter />
+          </>
+    );     
   }    
 
 export default Izdelki;
