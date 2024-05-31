@@ -54,7 +54,7 @@ root.render(
           <Route path="/" element={<Index />} />
           <Route path="/landing-page" element={<Landing />} />
           <Route path="/login-page" element={<Login />} />
-          <Route path="/profile-page" element={<Profile />} />
+          <Route path="/profile-page/:id" element={<Profile />} />
           <Route path="/register-page" element={<Register />} />
           <Route path="/sledenje-zdravju" element={<SledenjeZdravju />} />
           <Route path="/koledar" element={<Koledar />} />

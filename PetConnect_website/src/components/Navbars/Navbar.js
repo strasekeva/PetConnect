@@ -16,11 +16,12 @@
 
 */
 import React from "react";
+import { doc, getDoc } from "firebase/firestore";
 import { Link } from "react-router-dom";
 // JavaScript plugin that hides or shows a component based on your scroll
 import Headroom from "headroom.js";
 import Logout from "views/examples/Logout";
-import { auth } from "components/Firebase/Firebase.js"; // Make sure the path is correct
+import { auth, firestore } from "components/Firebase/Firebase.js"; // Make sure the path is correct
 import { onAuthStateChanged } from "firebase/auth";
 // reactstrap components
 import {
@@ -42,11 +43,15 @@ import {
   UncontrolledTooltip,
 } from "reactstrap";
 
+const DEFAULT_PROFILE_PICTURE_URL = "https://firebasestorage.googleapis.com/v0/b/petconnect-d446b.appspot.com/o/profilePictures%2Fdefault.jpg?alt=media";
+
 class DemoNavbar extends React.Component {
   state = {
     collapseClasses: "",
     collapseOpen: false,
-    isAuthenticated: false,  // State to keep track of authentication status
+    isAuthenticated: false,
+    profilePicture: DEFAULT_PROFILE_PICTURE_URL,
+    userId: null,
   };
 
   componentDidMount() {
@@ -54,11 +59,18 @@ class DemoNavbar extends React.Component {
     headroom.init();
 
     // Firebase Auth listener to toggle authentication status
-    this.authUnsub = onAuthStateChanged(auth, (user) => {
+    this.authUnsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        this.setState({ isAuthenticated: true });
+        this.setState({ isAuthenticated: true, userId: user.uid });
+        const userDoc = doc(firestore, "users", user.uid);
+        const docSnap = await getDoc(userDoc);
+
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          this.setState({ profilePicture: userData.profilePicture || DEFAULT_PROFILE_PICTURE_URL });
+        }
       } else {
-        this.setState({ isAuthenticated: false });
+        this.setState({ isAuthenticated: false, userId: null  });
       }
     });
   }
@@ -80,7 +92,7 @@ class DemoNavbar extends React.Component {
   };
 
   render() {
-    const { isAuthenticated } = this.state;
+    const { isAuthenticated, profilePicture, userId } = this.state;
     return (
       <>
         <header className="header-global">
@@ -208,13 +220,17 @@ class DemoNavbar extends React.Component {
                   {isAuthenticated && (
                     <UncontrolledDropdown nav inNavbar>
                       <DropdownToggle nav>
-                        <i className="ni ni-circle-08"></i>
+                        <img
+                          src={profilePicture}
+                          alt="Profile"
+                          style={{ width: "25px", height: "25px", borderRadius: "50%" }}
+                        />
                       </DropdownToggle>
                       <DropdownMenu
                         aria-labelledby="navbar-primary_dropdown_1"
                         right
                       >
-                        <DropdownItem to="/profile-page" tag={Link}>
+                        <DropdownItem to={`/profile-page/${userId}`} tag={Link}>
                           Uredi profil
                         </DropdownItem>
                         <DropdownItem divider />

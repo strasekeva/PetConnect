@@ -35,7 +35,7 @@ const ActivityCard = ({
                 <CardText><strong>Lokacija:</strong> {activity.location}</CardText>
                 <CardText><strong>Naslov:</strong> {activity.naslov}</CardText>
                 {activity.user && (
-                    <CardText><strong>Posted by:</strong> <Link to={`/profile/${activity.user.uid}`}>{activity.user.email}</Link></CardText>
+                    <CardText><strong>Objavil:</strong> <Link to={`/profile-page/${activity.user.uid}`}>{activity.user.email}</Link></CardText>
                 )}
                 <div>
                     {activity.registrationRequired === 'yes' && (!currentUser || currentUser.uid !== activity.user.uid) && (
