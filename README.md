@@ -30,7 +30,44 @@ Aplikacija omogoča dostop do nasvetov strokovnjakov, člankov o zdravju in osno
 - **Sledenje zdravju**:
 Lastniki lahko beležijo pomembne podatke, kot so cepljenja, prehrana, telesna teža in obiski pri veterinarju, da zagotovijo optimalno oskrbo svojih ljubljenčkov.
 
-
+## Arhitekturna shema
+```
+Spletni brskalnik
+   |
+   v
++-------------------------+
+| React SPA               |
+| JavaScript GUI          |
+|                         |
+| Tehnologije:            |
+| - React                 |
+| - JavaScript            |
++-------------------------+
+           |
+           v
++-------------------------+
+| Spletni strežnik        |
+| Node.js                 |
+|                         |
+| +---------------------+ |
+| | Express.js          | |
+| | Backend System      | |
+| |                     | |
+| | Tehnologije:        | |
+| | - Node.js           | |
+| | - Express.js        | |
+| +---------------------+ |
++-------------------------+
+           |
+           v
++-------------------------+
+| Podatkovni strežnik     |
+| Firebase                |
+|                         |
+| Tehnologije:            |
+| - Firebase              |
++-------------------------+
+```
 ## Tehnologije
 
 Projekt PetConnect je zgrajen z uporabo naslednjih tehnologij:
