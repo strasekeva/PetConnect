@@ -4,6 +4,9 @@ import SimpleFooter from "components/Footers/SimpleFooter.js";
 import { firestore, auth } from 'components/Firebase/Firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { FaStar, FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Form, FormGroup, Label, Input } from 'reactstrap';
+
 
 const categories = [
   { id: 'food', name: 'Hrana' },
@@ -27,6 +30,7 @@ const Izdelki = () => {
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [userLikedReviews, setUserLikedReviews] = useState([]);
   const [userDislikedReviews, setUserDislikedReviews] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,8 +116,9 @@ const Izdelki = () => {
 
         setProducts([...products, { ...reviewEntry, id: docRef.id, userEmail: userData.email }]);
       }
-      
+
       setNewReview({ category: '', productName: '', description: '', rating: 0, imageData: '' });
+      setShowModal(false); // Close modal after submission
     } catch (error) {
       console.error('Error adding/updating document: ', error);
     }
@@ -137,6 +142,7 @@ const Izdelki = () => {
       imageData: product.imageData
     });
     setEditingReviewId(product.id);
+    setShowModal(true); // Show modal when editing
   };
 
   const handleImageChange = (e) => {
@@ -210,206 +216,208 @@ const Izdelki = () => {
     }
   };
 
-    const filteredProducts = selectedCategory
-        ? products.filter(product => product.category === selectedCategory)
-        : products;
+  const filteredProducts = selectedCategory ? products.filter(product => product.category === selectedCategory) : products;
 
-    const [showForm, setShowForm] = useState(false);
-
-    const toggleForm = () => {
-      setShowForm(!showForm);
-    };
-    return (
-      <>
-        <Navbar />
-        <section className="section section-shaped section-lg">
-          <div className="shape shape-style-1 shape-default alpha-4">
-            <span />
+  return (
+    <>
+      <Navbar />
+      <section className="section section-shaped section-lg">
+        <div className="shape shape-style-1 shape-default alpha-4">
+          <span />
+        </div>
+      </section>
+      <div className="container mt-5">
+        {currentUser && (
+          <div>
+            <button onClick={() => setShowModal(true)} className="btn btn-primary">
+              Dodaj oceno
+            </button>
           </div>
-        </section>
-        <div className="container mt-5">
-          {currentUser && (
-            <div>
-              <button onClick={toggleForm} className="btn btn-primary">
-                {showForm ? 'Skrij obrazec' : 'Dodaj oceno'}
-              </button>
-              {showForm && (
-                <form onSubmit={handleSubmit}>
-                  <h2>{editingReviewId ? 'Uredi oceno' : 'Priporočila izdelkov za vašega ljubljenčka'}</h2>
-                  <div className="form-group">
-                    <label>Kategorija:</label>
-                    <select
-                      className="form-control"
-                      name="category"
-                      value={newReview.category}
-                      onChange={(e) => setNewReview({ ...newReview, category: e.target.value })}
-                      required
-                    >
-                      <option value="">Izberite kategorijo</option>
-                      {categories.map(category => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Naziv izdelka:</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="productName"
-                      value={newReview.productName}
-                      onChange={(e) => setNewReview({ ...newReview, productName: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Opis izdelka:</label>
-                    <textarea
-                      className="form-control"
-                      name="description"
-                      value={newReview.description}
-                      onChange={(e) => setNewReview({ ...newReview, description: e.target.value })}
-                      required
-                    ></textarea>
-                  </div>
-                  <div className="form-group">
-                    <label>Ocena:</label>
+        )}
+        <div className="mt-5">
+          <h3>Ocene in priporočila</h3>
+          <div className="form-group">
+            <label>Filtriraj po kategoriji:</label>
+            <select
+              className="form-control"
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+            >
+              <option value="">Vse kategorije</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {filteredProducts.length === 0 ? (
+            <p>Ni podanih ocen za to kategorijo</p>
+          ) : (
+            filteredProducts.map((product, index) => (
+              <div key={index} className="card mb-3">
+                <div className="card-header">
+                  <strong>Izdelek:</strong> {product.productName}
+                  {currentUser && currentUser.uid === product.userUID && (
+                    <>
+                      <button
+                        className="btn btn-warning btn-sm float-right ml-2"
+                        onClick={() => handleEdit(product)}
+                      >
+                        Uredi
+                      </button>
+                      <button
+                        className="btn btn-danger btn-sm float-right ml-2"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        Odstrani
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="card-body">
+                  <p><strong>Kategorija:</strong> {categories.find(category => category.id === product.category)?.name}</p>
+                  <p><strong>Opis:</strong> {product.description}</p>
+                  <p><strong>Ocena:</strong> 
+                    {[...Array(5)].map((star, index) => {
+                      const ratingValue = index + 1;
+                      return (
+                        <FaStar
+                          key={index}
+                          color={ratingValue <= product.rating ? "#ffc107" : "#e4e5e9"}
+                          size={25}
+                        />
+                      );
+                    })}
+                  </p>
+                  {product.imageData && (
                     <div>
-                      {[...Array(5)].map((star, index) => {
-                        const ratingValue = index + 1;
-                        return (
-                          <label key={index}>
-                            <input
-                              type="radio"
-                              name="rating"
-                              value={ratingValue}
-                              onClick={() => setNewReview({ ...newReview, rating: ratingValue })}
-                              required
-                            />
-                            <FaStar
-                              className="star"
-                              color={ratingValue <= (hover || newReview.rating) ? "#ffc107" : "#e4e5e9"}
-                              size={25}
-                              onMouseEnter={() => setHover(ratingValue)}
-                              onMouseLeave={() => setHover(newReview.rating)}
-                            />
-                          </label>
-                        );
-                      })}
+                      <strong>Slika izdelka:</strong>
+                      <br />
+                      <img src={product.imageData} alt="Product" className="img-fluid" style={{ maxWidth: '200px', maxHeight: '200px' }} />
                     </div>
+                  )}
+                  <br/>
+                  <p><strong>Datum:</strong> {product.timestamp}</p>
+                  <p><strong>Objavil:</strong> <Link to={`/profile-page/${product.userUID}`}>{product.userEmail}</Link></p>
+                  <div className="mt-2">
+                    <button
+                      className={`btn btn-success btn-sm mr-2 ${!currentUser ? 'disabled' : userLikedReviews.includes(product.id) ? 'disabled' : ''}`}
+                      onClick={() => currentUser ? handleLike(product.id) : alert("Samo za prijavljene uporabnike")}
+                      disabled={!currentUser || userLikedReviews.includes(product.id)}
+                    >
+                      <FaThumbsUp /> {product.likes || 0}
+                    </button>
+                    <button
+                      className={`btn btn-danger btn-sm ${!currentUser ? 'disabled' : userDislikedReviews.includes(product.id) ? 'disabled' : ''}`}
+                      onClick={() => currentUser ? handleDislike(product.id) : alert("Samo za prijavljene uporabnike")}
+                      disabled={!currentUser || userDislikedReviews.includes(product.id)}
+                    >
+                      <FaThumbsDown /> {product.dislikes || 0}
+                    </button>
                   </div>
-                  <div className="form-group">
-                    <label>Slika izdelka:</label>
-                    <input
-                      type="file"
-                      className="form-control-file"
-                      name="image"
-                      onChange={handleImageChange}
-                    />
-                  </div>
-                  <button type="submit" className="btn btn-primary">
-                    {editingReviewId ? 'Shrani spremembe' : 'Dodaj oceno'}
-                  </button>
-                </form>
-              )}
-            </div>
+                </div>
+              </div>
+            ))
           )}
-          <div className="mt-5">
-            <h3>Ocene in priporočila</h3>
-            <div className="form-group">
-              <label>Filtriraj po kategoriji:</label>
-              <select
-                className="form-control"
-                value={selectedCategory}
-                onChange={handleCategoryChange}
+        </div>
+      </div>
+      <SimpleFooter />
+      <Modal isOpen={showModal} toggle={() => setShowModal(false)}>
+        <ModalHeader toggle={() => setShowModal(false)}>
+          {editingReviewId ? 'Uredi oceno' : 'Dodaj oceno'}
+        </ModalHeader>
+        <ModalBody>
+          <Form onSubmit={handleSubmit}>
+            <FormGroup>
+              <Label for="category">Kategorija:</Label>
+              <Input
+                type="select"
+                name="category"
+                id="category"
+                value={newReview.category}
+                onChange={(e) => setNewReview({ ...newReview, category: e.target.value })}
+                required
               >
-                <option value="">Vse kategorije</option>
+                <option value="">Izberite kategorijo</option>
                 {categories.map(category => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
                 ))}
-              </select>
-            </div>
-    
-            {/* Preveri, ali je seznam filtriranih izdelkov prazen */}
-            {filteredProducts.length === 0 ? (
-              <p>Ni podanih ocen za to kategorijo</p>
-            ) : (
-              // Izpiši izdelke v karticah
-              filteredProducts.map((product, index) => (
-                <div key={index} className="card mb-3">
-                  <div className="card-header">
-                    <strong>Izdelek:</strong> {product.productName}
-                    {currentUser && currentUser.uid === product.userUID && (
-                      <>
-                        <button
-                          className="btn btn-warning btn-sm float-right ml-2"
-                          onClick={() => handleEdit(product)}
-                        >
-                          Uredi
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm float-right ml-2"
-                          onClick={() => handleDelete(product.id)}
-                        >
-                          Odstrani
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <div className="card-body">
-                    <p><strong>Kategorija:</strong> {categories.find(category => category.id === product.category)?.name}</p>
-                    <p><strong>Opis:</strong> {product.description}</p>
-                    <p><strong>Ocena:</strong> 
-                      {[...Array(5)].map((star, index) => {
-                        const ratingValue = index + 1;
-                        return (
-                          <FaStar
-                            key={index}
-                            color={ratingValue <= product.rating ? "#ffc107" : "#e4e5e9"}
-                            size={25}
-                          />
-                        );
-                      })}
-                    </p>
-                    {product.imageData && (
-                      <div>
-                        <strong>Slika izdelka:</strong>
-                        <br />
-                        <img src={product.imageData} alt="Product" className="img-fluid" style={{ maxWidth: '200px', maxHeight: '200px' }} />
-                      </div>
-                    )}
-                    <br/>
-                    <p><strong>Datum:</strong> {product.timestamp}</p>
-                    <p><strong>Objavil:</strong> {product.userEmail}</p>
-                    <div className="mt-2">
-                      <button
-                        className={`btn btn-success btn-sm mr-2 ${!currentUser ? 'disabled' : userLikedReviews.includes(product.id) ? 'disabled' : ''}`}
-                        onClick={() => currentUser ? handleLike(product.id) : alert("Samo za prijavljene uporabnike")}
-                        disabled={!currentUser || userLikedReviews.includes(product.id)}
-                      >
-                        <FaThumbsUp /> {product.likes || 0}
-                      </button>
-                      <button
-                        className={`btn btn-danger btn-sm ${!currentUser ? 'disabled' : userDislikedReviews.includes(product.id) ? 'disabled' : ''}`}
-                        onClick={() => currentUser ? handleDislike(product.id) : alert("Samo za prijavljene uporabnike")}
-                        disabled={!currentUser || userDislikedReviews.includes(product.id)}
-                      >
-                        <FaThumbsDown /> {product.dislikes || 0}
-                      </button>
-                    </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-          <SimpleFooter />
-          </>
-    );     
-  }    
+              </Input>
+            </FormGroup>
+            <FormGroup>
+              <Label for="productName">Naziv izdelka:</Label>
+              <Input
+                type="text"
+                name="productName"
+                id="productName"
+                value={newReview.productName}
+                onChange={(e) => setNewReview({ ...newReview, productName: e.target.value })}
+                required
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label for="description">Opis izdelka:</Label>
+              <Input
+                type="textarea"
+                name="description"
+                id="description"
+                value={newReview.description}
+                onChange={(e) => setNewReview({ ...newReview, description: e.target.value })}
+                required
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Ocena:</Label>
+              <div>
+                {[...Array(5)].map((star, index) => {
+                  const ratingValue = index + 1;
+                  return (
+                    <label key={index}>
+                      <Input
+                        type="radio"
+                        name="rating"
+                        value={ratingValue}
+                        onClick={() => setNewReview({ ...newReview, rating: ratingValue })}
+                        required
+                        style={{ display: 'none' }}
+                      />
+                      <FaStar
+                        className="star"
+                        color={ratingValue <= (hover || newReview.rating) ? "#ffc107" : "#e4e5e9"}
+                        size={25}
+                        onMouseEnter={() => setHover(ratingValue)}
+                        onMouseLeave={() => setHover(newReview.rating)}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </FormGroup>
+            <FormGroup>
+              <Label for="image">Slika izdelka:</Label>
+              <Input
+                type="file"
+                name="image"
+                id="image"
+                onChange={handleImageChange}
+              />
+            </FormGroup>
+            <ModalFooter>
+              <Button color="primary" type="submit">
+                {editingReviewId ? 'Shrani spremembe' : 'Dodaj oceno'}
+              </Button>
+              <Button color="secondary" onClick={() => setShowModal(false)}>
+                Prekliči
+              </Button>
+            </ModalFooter>
+          </Form>
+        </ModalBody>
+      </Modal>
+    </>
+  );
+};
 
 export default Izdelki;
