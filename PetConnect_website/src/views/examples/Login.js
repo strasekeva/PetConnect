@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, CardHeader, CardBody, FormGroup, Form, Input, InputGroupAddon, InputGroupText, InputGroup, Container, Row, Col } from "reactstrap";
+import { Button, Card, CardBody, FormGroup, Form, Input, InputGroupAddon, InputGroupText, InputGroup, Container, Row, Col, Alert } from "reactstrap";
 import { auth } from "components/Firebase/Firebase.js"; // Adjust this path as necessary
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import Navbar from "components/Navbars/Navbar.js";
@@ -22,8 +22,24 @@ function Login() {
       localStorage.setItem('userUid', userCredential.user.uid);
       navigate('/'); // Navigate to the homepage or profile page
     } catch (error) {
-      setError(error.message);
+      const errorMessage = getErrorMessage(error.code);
+      setError(errorMessage);
       console.error('Error during login:', error);
+    }
+  };
+
+  const getErrorMessage = (errorCode) => {
+    switch (errorCode) {
+      case 'auth/invalid-email':
+        return 'Napačen email naslov.';
+      case 'auth/user-disabled':
+        return 'Uporabniški račun je onemogočen.';
+      case 'auth/user-not-found':
+        return 'Uporabniški račun ne obstaja.';
+      case 'auth/wrong-password':
+        return 'Napačno geslo.';
+      default:
+        return 'Prišlo je do napake. Prosimo, poskusite znova.';
     }
   };
 
@@ -47,8 +63,9 @@ function Login() {
               <Col lg="5">
                 <Card className="bg-secondary shadow border-0">
                   <CardBody className="px-lg-5 py-lg-5">
-                  <h2 className="text-center display-2 mb-0">Prijava</h2>
+                    <h2 className="text-center display-2 mb-0">Prijava</h2>
                     <br />
+                    {error && <Alert color="danger">{error}</Alert>}
                     <Form role="form" onSubmit={handleLogin}>
                       <FormGroup className="mb-3">
                         <InputGroup className="input-group-alternative">
@@ -67,18 +84,18 @@ function Login() {
                               <i className="ni ni-lock-circle-open" />
                             </InputGroupText>
                           </InputGroupAddon>
-                          <Input placeholder="Password" type="password" autoComplete="off" onChange={(e) => setPassword(e.target.value)} />
+                          <Input placeholder="Geslo" type="password" autoComplete="off" onChange={(e) => setPassword(e.target.value)} />
                         </InputGroup>
                       </FormGroup>
                       <div className="custom-control custom-control-alternative custom-checkbox">
                         <input className="custom-control-input" id=" customCheckLogin" type="checkbox" />
                         <label className="custom-control-label" htmlFor=" customCheckLogin">
-                          <span>Remember me</span>
+                          <span>Zapomni se me</span>
                         </label>
                       </div>
                       <div className="text-center">
                         <Button className="my-4" color="primary" type="submit">
-                          Sign in
+                          Prijava
                         </Button>
                       </div>
                     </Form>
@@ -87,12 +104,12 @@ function Login() {
                 <Row className="mt-3">
                   <Col xs="6">
                     <a className="text-light" href="#pablo" onClick={(e) => e.preventDefault()}>
-                      <small>Forgot password?</small>
+                      <small>Pozabljeno geslo?</small>
                     </a>
                   </Col>
                   <Col className="text-right" xs="6">
                     <a className="text-light" href="#pablo" onClick={(e) => e.preventDefault()}>
-                      <small>Create new account</small>
+                      <small>Ustvari nov račun</small>
                     </a>
                   </Col>
                 </Row>

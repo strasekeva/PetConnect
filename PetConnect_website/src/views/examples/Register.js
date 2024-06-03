@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Card, CardHeader, CardBody, FormGroup, Form, Input,
-  InputGroupAddon, InputGroupText, InputGroup, Container, Row, Col
+  Button, Card, CardBody, FormGroup, Form, Input,
+  InputGroupAddon, InputGroupText, InputGroup, Container, Row, Col, Alert
 } from "reactstrap";
 import Navbar from "components/Navbars/Navbar.js";
 import SimpleFooter from "components/Footers/SimpleFooter.js";
-import { firestore, auth } from "components/Firebase/Firebase.js"; // Predpostavka o pravi poti
+import { firestore, auth } from "components/Firebase/Firebase.js"; // Adjust this path as necessary
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from "firebase/firestore";
 
@@ -16,31 +16,47 @@ function Register() {
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [error, setError] = useState('');
-  const mainRef = useRef(null); 
+  const mainRef = useRef(null);
   const navigate = useNavigate();
 
   const handleRegister = (event) => {
     event.preventDefault();
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        console.log('Registracija uspešna, UID:', userCredential.user.uid);
+        console.log('Registration successful, UID:', userCredential.user.uid);
         const userDocRef = doc(firestore, "users", userCredential.user.uid);
         return setDoc(userDocRef, {
           name: name,
-          surname: surname, // Assuming you want to save this as well
+          surname: surname,
           email: email,
         });
       })
       .then(() => {
-        console.log("Dodatni podatki shranjeni v Firestore");
-        navigate('/login-page'); 
+        console.log("Additional user information saved to Firestore");
+        navigate('/login-page');
       })
       .catch((error) => {
-        setError(error.message);
-        console.error('Napaka pri registraciji ali shranjevanju v Firestore:', error);
+        const errorMessage = getErrorMessage(error.code);
+        setError(errorMessage);
+        console.error('Error during registration or saving to Firestore:', error);
       });
   };
-  
+
+  const getErrorMessage = (errorCode) => {
+    switch (errorCode) {
+      case 'auth/email-already-in-use':
+        return 'Ta email je že uporabljen.';
+      case 'auth/invalid-email':
+        return 'Ta email ni pravilen.';
+      case 'auth/operation-not-allowed':
+        return 'Email/password accounts are not enabled.';
+      case 'auth/weak-password':
+        return 'To geslo je preslaba, imeti mora vsaj 6 znakov.';
+      default:
+        return `Napaka: ${errorCode}. Prosim poskusi ponovno.`;
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -63,6 +79,7 @@ function Register() {
                   <CardBody className="px-lg-5 py-lg-5">
                     <h2 className="text-center display-2 mb-0">Registracija</h2>
                     <br />
+                    {error && <Alert color="danger">{error}</Alert>}
                     <Form role="form" onSubmit={handleRegister}>
                       <FormGroup>
                         <InputGroup className="input-group-alternative mb-3">
@@ -71,7 +88,7 @@ function Register() {
                               <i className="ni ni-hat-3" />
                             </InputGroupText>
                           </InputGroupAddon>
-                          <Input placeholder="Name" type="text" onChange={(e) => setName(e.target.value)} />
+                          <Input placeholder="Ime" type="text" onChange={(e) => setName(e.target.value)} />
                         </InputGroup>
                       </FormGroup>
                       <FormGroup>
@@ -81,7 +98,7 @@ function Register() {
                               <i className="ni ni-hat-3" />
                             </InputGroupText>
                           </InputGroupAddon>
-                          <Input placeholder="Surname" type="text" onChange={(e) => setSurname(e.target.value)} />
+                          <Input placeholder="Priimek" type="text" onChange={(e) => setSurname(e.target.value)} />
                         </InputGroup>
                       </FormGroup>
                       <FormGroup>
@@ -101,17 +118,9 @@ function Register() {
                               <i className="ni ni-lock-circle-open" />
                             </InputGroupText>
                           </InputGroupAddon>
-                          <Input placeholder="Password" type="password" autoComplete="off" onChange={(e) => setPassword(e.target.value)} />
+                          <Input placeholder="Geslo" type="password" autoComplete="off" onChange={(e) => setPassword(e.target.value)} />
                         </InputGroup>
                       </FormGroup>
-                      <div className="text-muted font-italic">
-                        <small>
-                          password strength:{" "}
-                          <span className="text-success font-weight-700">
-                            strong
-                          </span>
-                        </small>
-                      </div>
                       <Row className="my-4">
                         <Col xs="12">
                           <div className="custom-control custom-control-alternative custom-checkbox">
@@ -125,12 +134,12 @@ function Register() {
                               htmlFor="customCheckRegister"
                             >
                               <span>
-                                I agree with the{" "}
+                                Strinjam se z{" "}
                                 <a
                                   href="#pablo"
                                   onClick={(e) => e.preventDefault()}
                                 >
-                                  Privacy Policy
+                                  politiko zasebnosti
                                 </a>
                               </span>
                             </label>
@@ -143,7 +152,7 @@ function Register() {
                           color="primary"
                           type="submit"
                         >
-                          Create account
+                          Ustvari račun
                         </Button>
                       </div>
                     </Form>
