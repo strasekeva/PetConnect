@@ -108,22 +108,38 @@ const SledenjeZdravju = () => {
 
   const generatePDF = () => {
     const doc = new jsPDF();
-    doc.text("Zdravstveni podatki vašega ljubljencka:", 10, 10);
   
-    let yOffset = 20; // Starting Y offset for the PDF content
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Zdravstveni podatki vašega ljubljencka", 10, 10);
   
-    sortedEntries.forEach((entry, index) => {
+    let yOffset = 20; 
+    doc.setFontSize(12); 
+    doc.setFont("helvetica", "normal");
+  
+    sortedEntries.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  
+    sortedEntries.forEach((entry) => {
       if (entry.userUID === currentUser.uid) {
+        doc.setDrawColor(0, 0, 0); 
+        doc.line(10, yOffset - 5, 200, yOffset - 5);
+        
+        doc.setFont("helvetica", "bold");
         doc.text(`Datum in ura vnosa: ${entry.timestamp}`, 10, yOffset);
         yOffset += 10;
+        
+        doc.setFont("helvetica", "italic");
         doc.text("Cepljenja:", 10, yOffset);
         yOffset += 10;
-        entry.cepljenje.forEach((cepljenje, i) => {
-          if (cepljenje.namen && cepljenje.datum) { // Check if both fields are not empty
+  
+        doc.setFont("helvetica", "normal");
+        entry.cepljenje.forEach((cepljenje) => {
+          if (cepljenje.namen && cepljenje.datum) {
             doc.text(`- Namen: ${cepljenje.namen}, Datum: ${cepljenje.datum}`, 10, yOffset);
             yOffset += 10;
           }
         });
+  
         doc.text(`Prehrana: ${entry.prehrana}`, 10, yOffset);
         yOffset += 10;
         doc.text(`Teža: ${entry.teza} kg`, 10, yOffset);
