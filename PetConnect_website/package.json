@@ -27,7 +27,7 @@
   "bugs": {
     "url": "https://github.com/creativetimofficial/argon-design-system-react/issues"
   },
-  "homepage": "https://demos.creative-tim.com/argon-design-system-react/",
+  "homepage": "https://petconnect-d446b.web.app",
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "server": "node server.mjs",
