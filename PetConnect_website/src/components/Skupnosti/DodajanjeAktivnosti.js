@@ -246,8 +246,8 @@ const DodajanjeAktivnosti = ({ onClose, activity, onSave }) => {
                     <NaslovSelector setLatitude={setLatitude} setLongitude={setLongitude}  setNaslov={setNaslov}/>
                 </MapContainer>
             </div>
-            <Button type="submit" color="primary">{activity ? 'Update Activity' : 'Add Activity'}</Button>
-            <Button type="button" color="secondary" onClick={onClose} style={{ marginLeft: '10px' }}>Cancel</Button>
+            <Button type="submit" color="primary">{activity ? 'Uredi aktivnost' : 'Dodaj aktivnost'}</Button>
+            <Button type="button" color="secondary" onClick={onClose} style={{ marginLeft: '10px' }}>Prekliči</Button>
         </Form>
     );
 };
