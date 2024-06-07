@@ -102,8 +102,12 @@ class DemoNavbar extends React.Component {
             id="navbar-main"
           >
             <Container>
-              <NavbarBrand className="mr-lg-5" to="/" tag={Link}>
-                <p>PETCONNECT</p>
+            <NavbarBrand className="mr-lg-5" to="/" tag={Link}>
+                <img
+                  alt="..."
+                  src={require("assets/img/brand/logo.jpg")}
+                  style={{ height: "60px", width: "auto", borderRadius: "15px" }}
+                  />
               </NavbarBrand>
               <button className="navbar-toggler" id="navbar_global">
                 <span className="navbar-toggler-icon" />
@@ -121,7 +125,8 @@ class DemoNavbar extends React.Component {
                       <Link to="/">
                         <img
                           alt="..."
-                          src={require("assets/img/brand/argon-react.png")}
+                          src={require("assets/img/brand/logo.jpg")}
+                          style={{ height: "80px", width: "auto", borderRadius: "15px" }}
                         />
                       </Link>
                     </Col>
