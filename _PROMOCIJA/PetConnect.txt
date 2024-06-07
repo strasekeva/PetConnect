@@ -1,0 +1,26 @@
+PetConnect
+
+Omogočanje lastnikom hišnih ljubljenčkov povezovanje s skupinami, strokovnjaki in ponudniki storitev za izboljšanje zdravja, nege in dobrega počutja njihovih živali.
+
+Leto izdelave: 2024
+
+Anja Lužar,
+Eva Strašek,
+Lara Zupanc
+
+Domača stran: https://petconnect-d446b.web.app/
+Vir podatkov: https://url.si/
+Koda: https://github.com/strasekeva/PetConnect.git
+
+Kategorizacija: spletna aplikacija
+
+Oznake: ReactJS, NodeJS, Python, GitHub, UporabaAI, Express, JavaScript, Firebase
+
+Opis projekta v nekaj odstavkih / vrsticah (cca 150 besed):
+
+PetConnect, zasnovan za lastnike hišnih ljubljenčkov, omogoča povezovanje s skupinami, strokovnjaki in ponudniki storitev, da bi izboljšali zdravje, nego in dobro počutje svojih živali. Uporabniki lahko s pomočjo aplikacije dobijo nasvete, organizirajo sprehode ali skrb za ljubljenčke v času dopusta ter delijo informacije o najboljši hrani, treningih in izdelkih.
+
+PetConnect omogoča povezovanje z lokalnimi skupinami, enostavno iskanje in rezervacijo storitev za hišne ljubljenčke, dostop do ocen in priporočil za hrano, igrače in druge izdelke ter prejemanje nasvetov strokovnjakov o zdravju in negi. Uporabniki lahko beležijo pomembne podatke o zdravju svojih ljubljenčkov, kot so cepljenja in obiski pri veterinarju.
+
+Glavni uporabniki aplikacije so lastniki hišnih ljubljenčkov, ki iščejo informacije in storitve, ter ponudniki storitev, kot so frizerji, sprehajalci in trenerji. PetConnect predstavlja celovito rešitev za vse, ki želijo svojim ljubljenčkom nuditi najboljšo možno oskrbo in jim omogočiti zdravo ter srečno življenje.
+
