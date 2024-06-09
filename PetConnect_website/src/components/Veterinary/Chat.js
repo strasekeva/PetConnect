@@ -66,7 +66,7 @@ const ChatComponent = () => {
 
     try {
       // Predpostavimo, da imate endpoint, ki vrne odgovor od ChatGPT
-      const response = await fetch('/api/get-answer', {
+      const response = await fetch('https://us-central1-petconnect-d446b.cloudfunctions.net/api/get-answer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

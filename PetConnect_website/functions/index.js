@@ -1,13 +1,60 @@
 const functions = require('firebase-functions');
+const express = require('express');
+const cors = require('cors');
 
-// Dynamically import the server module
-import('./server.mjs').then((module) => {
-    const api = module.default; // Obtain the exported app from the server module
+// Dinamični uvoz node-fetch
+let fetch;
 
-    // Export the Firebase function after the module has been successfully loaded
-    exports.api = functions.https.onRequest(api);
+// Nastavite Express aplikacijo
+const app = express();
+app.use(cors({ origin: true }));
+app.use(express.json());
 
-}).catch(err => {
-    console.error('Failed to load the server module:', err);
-    // Handle failures where the server might not load
+// Primer API poti
+app.post('/get-answer', async (req, res) => {
+  if (!fetch) {
+    fetch = (await import('node-fetch')).default;
+  }
+  
+  const { question } = req.body;
+  const API_KEY = functions.config().openai.key; // Nastavitev prek Firebase Config
+  const API_URL = 'https://zukijourney.xyzbot.net/v1/chat/completions';
+
+  const requestBody = {
+    stream: false,
+    model: 'gpt-4',
+    response_format: { type: 'json_object' },
+    messages: [{
+      role: 'user',
+      content: `Odgovori na naslednje vprašanje kot veterinar za male živali in v slovenščini: ${question}`,
+    }],
+    max_tokens: 150,
+  };
+
+  try {
+    console.log('Sending request to API with body:', requestBody);
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.text();
+    if (!response.ok) {
+      console.error('Error from API:', data);
+      return res.status(response.status).json({ error: data });
+    }
+
+    console.log('Received response from API:', data);
+    res.json(JSON.parse(data));
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Error fetching the answer' });
+  }
 });
+
+// Izvozite Express aplikacijo kot Firebase funkcijo
+exports.api = functions.https.onRequest(app);
