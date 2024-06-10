@@ -30,6 +30,13 @@ Aplikacija omogoča dostop do nasvetov strokovnjakov, člankov o zdravju in osno
 - **Sledenje zdravju**:
 Lastniki lahko beležijo pomembne podatke, kot so cepljenja, prehrana, telesna teža in obiski pri veterinarju, da zagotovijo optimalno oskrbo svojih ljubljenčkov.
 
+
+## Tehnološki sklad
+- **Front-end**: React, JavaScript
+- **Back-end**: Node.js, Express.js
+- **Podatkovna baza**: Firebase
+  
+
 ## Arhitekturna shema
 ```
 Spletni brskalnik
@@ -68,35 +75,15 @@ Spletni brskalnik
 | - Firebase              |
 +-------------------------+
 ```
-## Tehnologije
 
-Projekt PetConnect je zgrajen z uporabo naslednjih tehnologij:
 
-- Node.js
-- Express.js
-- JavaScript
-- React
+## Avtorji
 
-## Namestitev in zagon projekta
+- Eva Strašek
+- Anja Lužar
+- Lara Zupanc
 
-1. **Klonirajte repozitorij**:
 
-    ```bash
-    git clone https://github.com/strasekeva/PetConnect.git
-    cd petconnect-website
-    ```
-
-2. **Namestite odvisnosti**:
-
-    ```bash
-    npm install
-    ```
-
-3. **Zaženite razvojni strežnik**:
-
-    ```bash
-    npm start
-    ```
-
-S temi koraki bo vaša aplikacija PetConnect zagnana in pripravljena za uporabo.
+## Povezava do aplikacije
+https://petconnect-d446b.web.app/
 
