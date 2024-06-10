@@ -73,6 +73,7 @@
     "moment": "2.29.4",
     "node-fetch": "^3.3.2",
     "nouislider": "15.4.0",
+    "openai": "^4.49.1",
     "react": ">=16.0.0",
     "react-bootstrap": "^2.10.2",
     "react-calendar": "^5.0.0",

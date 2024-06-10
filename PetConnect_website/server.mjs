@@ -16,23 +16,22 @@ app.post('/api/get-answer', async (req, res) => {
   const { question } = req.body;
 
   const API_KEY = process.env.OPENAI_API_KEY;
-  const API_URL = 'https://zukijourney.xyzbot.net/v1/chat/completions';
+  const API_URL = 'https://api.openai.com/v1/chat/completions';
 
   const requestBody = {
     stream: false,
-    model: 'gpt-4',
-    response_format: { type: 'json_object' },
+    model: 'gpt-3.5-turbo',
     messages: [
       {
         role: 'user',
         content: `Odgovori na naslednje vprašanje kot veterinar za male živali in v slovenščini: ${question}`,
       },
     ],
-    max_tokens: 150,
+    max_tokens: 400,
   };
 
   try {
-    console.log('Sending request to API with body:', requestBody);
+    console.log('Sending request to OpenAI with body:', requestBody);
 
     const response = await fetch(API_URL, {
       method: 'POST',
@@ -43,16 +42,18 @@ app.post('/api/get-answer', async (req, res) => {
       body: JSON.stringify(requestBody),
     });
 
-    const data = await response.text(); // Use text() instead of json() for debugging purposes
+    const data = await response.json(); // Use json() to parse the response
 
-    if (!response.ok) {
-      console.error('Error from API:', data);
-      return res.status(response.status).json({ error: data });
+    console.log('Received response from OpenAI:', data);
+
+    // Preverite in dostopajte do pravilnih podatkov v odgovoru
+    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+      const answer = data.choices[0].message.content;
+      res.json({ answer });
+    } else {
+      console.error('Invalid response format:', data);
+      res.status(500).json({ error: 'Invalid response format from OpenAI' });
     }
-
-    console.log('Received response from API:', data);
-
-    res.json(JSON.parse(data));
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Error fetching the answer' });

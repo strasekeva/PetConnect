@@ -18,17 +18,16 @@ app.post('/get-answer', async (req, res) => {
   
   const { question } = req.body;
   const API_KEY = functions.config().openai.key; // Nastavitev prek Firebase Config
-  const API_URL = 'https://zukijourney.xyzbot.net/v1/chat/completions';
+  const API_URL = 'https://api.openai.com/v1/chat/completions';
 
   const requestBody = {
     stream: false,
-    model: 'gpt-4',
-    response_format: { type: 'json_object' },
+    model: 'gpt-3.5-turbo',
     messages: [{
       role: 'user',
       content: `Odgovori na naslednje vprašanje kot veterinar za male živali in v slovenščini: ${question}`,
     }],
-    max_tokens: 150,
+    max_tokens: 400,
   };
 
   try {

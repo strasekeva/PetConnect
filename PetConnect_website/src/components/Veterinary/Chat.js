@@ -52,7 +52,7 @@ const ChatComponent = () => {
     if (event) event.preventDefault();
 
     const questionToSubmit = savedQuestion || question;
-    
+
     if (!currentUser) {
       alert('Potrebna je prijava');
       localStorage.setItem('unsavedQuestion', questionToSubmit);
@@ -123,7 +123,7 @@ const ChatComponent = () => {
           <Container>
             <Row className="justify-content-center">
               <Col md="8">
-                <h1 style={{marginTop: "3%"}} className="text-center display-2 mb-0">Kaj te zanima</h1>
+                <h1 style={{ marginTop: "3%" }} className="text-center display-2 mb-0">Kaj te zanima</h1>
                 <Form onSubmit={handleSubmit}>
                   <FormGroup>
                     <Label for="question">Vprašanje</Label>
@@ -149,14 +149,14 @@ const ChatComponent = () => {
                 </Form>
                 {error && (
                   <Alert color="danger" className="mt-4">
-                    <h4 className="alert-heading">Error</h4>
+                    <h4 className="alert-heading">Napaka</h4>
                     <p>{error}</p>
                   </Alert>
                 )}
                 {answer && (
-                  <Alert color="success" className="mt-4">
-                    <h4 className="alert-heading">Answer</h4>
-                    <p>{answer}</p>
+                  <Alert color="secondary" className="mt-4">
+                    <h4 className="alert-heading" style={{ color: 'black' }}>Odgovor</h4>
+                    <p style={{ color: 'black' }}>{answer}</p>
                   </Alert>
                 )}
                 {showHistory && <History history={history} />}
