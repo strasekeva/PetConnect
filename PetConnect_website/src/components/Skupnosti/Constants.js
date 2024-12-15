@@ -1,6 +1,4 @@
 import L from 'leaflet';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPaw, faGraduationCap, faPuzzlePiece, faHeartbeat, faTrophy, faBook } from '@fortawesome/free-solid-svg-icons';
 
 
